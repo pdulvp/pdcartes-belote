@@ -4,6 +4,7 @@
 #include "Belote.h"
 #include "CardArt.h"
 #include "CardDeck.h"
+#include "TableLook.h"
 #include "Palette.h"
 #include "Rivals.h"
 
@@ -455,6 +456,7 @@ void TableView::setZoom(int percent) {
     // les tailles d'un coup laisse derrière soi un cache qui ne resservira
     // plus.
     if (const CardSet *set = CardDecks::instance().current()) set->forgetDrawings();
+    forgetBackDrawings();
     relayout();
     update();
     Q_EMIT zoomChanged(now);
