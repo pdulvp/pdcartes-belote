@@ -245,6 +245,13 @@ nom : sous le jeu choisi, une main d'exemple montre ses huit rangs dans les
 quatre couleurs, et les dos s'offrent en vignettes — « Treillis » ne dit pas à
 quoi un dos ressemble.
 
+Le dos a sa propre liste de jeux, et il n'est donc **pas obligé de venir du jeu
+des faces**. Un jeu apporte de belles figures et des dos dont on ne veut pas, un
+autre n'apporte que des dos, et le treillis que le programme dessine va avec
+tout : les figures d'un jeu et le dos d'un autre font un jeu qui n'existe pas et
+qui se tient très bien. Par défaut le dos suit les faces, ce qui est le cas
+ordinaire.
+
 Un jeu installé apporte des images d'une finesse donnée — les `CARDS.DLL` de
 Windows font 71 sur 96 — et une figure réduite au quart de cela sur le tapis
 n'est plus qu'un bruit de couleurs. La **taille des cartes** se règle donc, de
