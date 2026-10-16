@@ -240,8 +240,10 @@ sur ce profil-là.
 
 La belote dessine ses cartes elle-même par défaut. Pour en employer d'autres,
 on dépose un fichier `.cartes` dans `~/.config/cartes` et on le choisit dans
-les réglages, avec son dos — les dos s'y choisissent **sur l'image** et non sur
-leur nom, « Treillis » ne disant pas à quoi un dos ressemble.
+les réglages, avec son dos. Les deux se jugent **sur l'image** et non sur un
+nom : sous le jeu choisi, une main d'exemple montre ses huit rangs dans les
+quatre couleurs, et les dos s'offrent en vignettes — « Treillis » ne dit pas à
+quoi un dos ressemble.
 
 Un jeu installé apporte des images d'une finesse donnée — les `CARDS.DLL` de
 Windows font 71 sur 96 — et une figure réduite au quart de cela sur le tapis
