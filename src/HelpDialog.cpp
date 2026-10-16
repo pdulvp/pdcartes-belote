@@ -353,9 +353,11 @@ donne sur ce profil-là.</p>
 <h2>Les cartes et le drap</h2>
 
 <p>Les cartes que le jeu dessine lui-même ne sont pas les seules : les réglages
-listent les jeux posés dans le dossier des cartes, avec leurs dos en aperçu, et
-l'atelier sait en fabriquer — il ouvre aussi les <b>CARDS.DLL</b> de Windows. La
-couleur du drap se choisit là aussi. Les trois — le jeu, le dos, le drap —
+listent les jeux posés dans le dossier des cartes, et l'atelier sait en
+fabriquer — il ouvre aussi les <b>CARDS.DLL</b> de Windows. Sous le jeu choisi,
+une main d'exemple montre ses huit rangs dans les quatre couleurs, et les dos
+s'offrent en vignettes sur leur propre page : un jeu de cartes se juge sur
+l'image et non sur son nom. La couleur du drap se choisit là aussi. Les trois — le jeu, le dos, le drap —
 appartiennent au profil : changer de profil est changer de table, et une table
 n'a pas forcément le même tapis que l'autre.</p>
 )HTML";

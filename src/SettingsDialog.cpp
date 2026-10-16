@@ -43,6 +43,14 @@ constexpr int kSectionRowHeight = 30;
 // assez petit pour que les dos d'un jeu tiennent sur une ligne.
 constexpr int kBackHeight = 92;
 
+// Et celle des figures. Plus courte que les dos : il y en a huit sur la ligne
+// et il faut qu'elles tiennent, là où un dos est seul à dire ce qu'il est.
+constexpr int kFaceHeight = 78;
+constexpr qreal kFaceGap = 5.0;
+
+// L'air entre les cartes et le bord du panneau qui les porte.
+constexpr int kStripPad = 9;
+
 QCheckBox *switchRow(QWidget *parent, const QString &text, bool on) {
     auto *box = new QCheckBox(text, parent);
     box->setChecked(on);
@@ -153,7 +161,98 @@ QPixmap backPreview(const CardSet *set, int at, const QSizeF &box) {
     return tile;
 }
 
+// La main d'exemple, de l'as au sept.
+//
+// Les huit rangs une fois chacun et les quatre couleurs deux fois, ce qui est
+// tout ce qu'un jeu de belote a à montrer : huit cartes suffisent à dire à
+// quoi celui-là ressemble. Et huit est aussi ce qu'on tient en main, si bien
+// que la bande ressemble à ce qu'on aura devant soi.
+QVector<Card> sampleHand() {
+    static const int ranks[] = {kAs, kRoi, kDame, kValet, kDix, kNeuf, kHuit, kSept};
+    static const Suit suits[] = {Suit::Pique, Suit::Coeur, Suit::Carreau, Suit::Trefle};
+    QVector<Card> hand;
+    for (int i = 0; i < 8; ++i) {
+        Card card;
+        card.rank = ranks[i];
+        card.suit = suits[i % 4];
+        card.id = cardIdFor(card.rank, card.suit);
+        hand.append(card);
+    }
+    return hand;
+}
+
 } // namespace
+
+// Les figures du jeu choisi, posées côte à côte.
+//
+// La même idée que les dos, et pour la même raison : le nom d'un jeu ne dit
+// pas à quoi ses cartes ressemblent, et c'est la seule chose qu'on veuille en
+// savoir. Mais on n'en choisit pas une -- c'est le jeu entier qu'on prend dans
+// la liste au-dessus -- alors la bande se regarde et ne se clique pas : ni
+// survol, ni sélection, ni passage au clavier.
+//
+// Dessinée plutôt que mise dans une liste : une QListWidget dont rien n'est
+// sélectionnable est une liste qui ment sur ce qu'elle est, et il n'y a ici
+// qu'une rangée d'images à peindre.
+class CardStrip : public QWidget {
+public:
+    explicit CardStrip(QWidget *parent = nullptr) : QWidget(parent), m_hand(sampleHand()) {
+        setFocusPolicy(Qt::NoFocus);
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setFixedHeight(kFaceHeight + 2 * kStripPad);
+    }
+
+    QSize sizeHint() const override {
+        const QSizeF card = cardSizeForHeight(kFaceHeight);
+        const qreal wide = card.width() * m_hand.size() + kFaceGap * (m_hand.size() - 1);
+        return QSize(int(std::ceil(wide)) + 2 * kStripPad, height());
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override {
+        const Palette &scheme = currentPalette();
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::TextAntialiasing, true);
+
+        // Le même panneau que la liste des dos, pour que les deux bandes
+        // soient visiblement deux bandes de la même sorte.
+        const QRectF panel = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+        QPainterPath shape;
+        shape.addRoundedRect(panel, 8, 8);
+        painter.setPen(Qt::NoPen);
+        painter.fillPath(shape, scheme.field);
+        painter.setBrush(Qt::NoBrush);
+        painter.setPen(QPen(scheme.edge, 1.0));
+        painter.drawPath(shape);
+
+        const int count = m_hand.size();
+        if (count <= 0) return;
+
+        // La hauteur qu'on voudrait, et celle qui tient. Un jeu installé
+        // apporte sa propre proportion -- les CARDS.DLL de Windows sont plus
+        // larges que les cartes dessinées -- et la même rangée de huit y est
+        // plus large d'autant.
+        const qreal room = panel.width() - 2 * kStripPad - kFaceGap * (count - 1);
+        const qreal fits = cardSizeForWidth(room / count).height();
+        const QSizeF card = cardSizeForHeight(std::max(24.0, std::min(qreal(kFaceHeight), fits)));
+
+        const qreal span = card.width() * count + kFaceGap * (count - 1);
+        qreal x = panel.center().x() - span / 2.0;
+        const qreal y = panel.center().y() - card.height() / 2.0;
+
+        CardLook look;
+        look.noShadow = true;   // elles sont sur le corps de la boîte, pas sur le drap
+        for (const Card &card_ : m_hand) {
+            drawCardFace(&painter, QRectF(x, y, card.width(), card.height()), card_, scheme,
+                         look);
+            x += card.width() + kFaceGap;
+        }
+    }
+
+private:
+    QVector<Card> m_hand;
+};
 
 SettingsDialog::SettingsDialog(const GameSettings &settings, QWidget *parent)
     : QDialog(parent), m_settings(settings) {
@@ -185,8 +284,12 @@ SettingsDialog::SettingsDialog(const GameSettings &settings, QWidget *parent)
     buildPlayPage();
     buildDuringPage();
     buildCardsPage();
+    buildBacksPage();
     buildFeltPage();
 
+    // Après les pages, et non au bout de celle des cartes : remplir la liste
+    // des jeux remplit aussi celle des dos, qui est sur la page d'après.
+    fillDecks();
     dressLists();
 
     connect(m_sections, &QTreeWidget::currentItemChanged, this,
@@ -343,7 +446,14 @@ void SettingsDialog::buildCardsPage() {
 
     m_deckNote = asideLabel(page, QString());
     rows->addWidget(m_deckNote);
-    rows->addSpacing(12);
+    rows->addSpacing(8);
+
+    // Les figures, tout de suite sous le jeu qu'on vient de choisir : c'est la
+    // réponse à « à quoi celui-là ressemble-t-il », et elle est à sa place
+    // contre la question.
+    m_faces = new CardStrip(page);
+    rows->addWidget(m_faces);
+    rows->addSpacing(14);
 
     auto *zoomRow = new QHBoxLayout;
     zoomRow->setSpacing(10);
@@ -374,10 +484,19 @@ void SettingsDialog::buildCardsPage() {
         page, tr("Un jeu installé apporte des images d'une finesse donnée : agrandies, les "
                  "figures posées sur le tapis se lisent. Ctrl et la molette font la même "
                  "chose pendant la partie.")));
-    rows->addSpacing(14);
+    rows->addStretch(1);
 
-    rows->addWidget(fieldLabel(page, tr("Dos :")));
-    rows->addSpacing(5);
+    connect(m_deck, &QComboBox::currentIndexChanged, this, [this] {
+        rememberDeck(m_deck->currentData().toString());
+        fillBacks();
+        describeDeck();
+        m_faces->update();
+    });
+}
+
+void SettingsDialog::buildBacksPage() {
+    QVBoxLayout *rows = addPage(tr("Les dos"), tr("Les dos"));
+    QWidget *page = m_pages->widget(m_pages->count() - 1);
 
     // Les dos se choisissent sur l'image plutôt que sur leur nom : « Treillis »
     // ne dit pas à quoi un dos ressemble, et c'est la seule chose qu'on veut
@@ -403,14 +522,14 @@ void SettingsDialog::buildCardsPage() {
     // dessous quand un jeu en apporte plus qu'il n'en tient.
     m_backs->setFixedHeight(kBackHeight + 32 + 22);
     rows->addWidget(m_backs);
+    rows->addSpacing(6);
+    rows->addWidget(asideLabel(
+        page, tr("Le dos est ce qu'on voit des trois autres mains pendant toute la donne, "
+                 "et de la retourne avant qu'elle soit retournée. Un jeu installé apporte "
+                 "les siens ; sans eux, c'est le treillis que le programme dessine, dans la "
+                 "couleur du tapis. Le dos appartient au profil, comme le jeu de cartes.")));
     rows->addStretch(1);
 
-    fillDecks();
-    connect(m_deck, &QComboBox::currentIndexChanged, this, [this] {
-        rememberDeck(m_deck->currentData().toString());
-        fillBacks();
-        describeDeck();
-    });
     connect(m_backs, &QListWidget::currentItemChanged, this,
             [](QListWidgetItem *now, QListWidgetItem *) {
                 if (!now) return;
@@ -446,10 +565,12 @@ void SettingsDialog::buildFeltPage() {
             recolourSectionHeadings(this);
             dressFelts();
             dressLists();
-            // Les vignettes des dos sont dessinées aux couleurs du tapis : le
-            // treillis que le programme dessine en est fait, et le fond sur
-            // lequel une carte transparente est posée aussi.
+            // Les deux bandes sont dessinées aux couleurs du tapis : le
+            // treillis que le programme dessine en est fait, le fond sur
+            // lequel une carte transparente est posée aussi, et le papier des
+            // figures dessinées avec son encre.
             fillBacks();
+            if (m_faces) m_faces->update();
         });
         m_felts.append(swatch);
         feltRow->addWidget(swatch);
