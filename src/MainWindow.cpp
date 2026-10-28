@@ -106,7 +106,7 @@ void inkLabel(QLabel *label, const QColor &colour) {
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    setWindowTitle(tr("pdcartes-belote"));
+    setWindowTitle(tr("PDCartes Belote"));
 
     readSettings();
     // Le drap du profil, et ses cartes : tous deux lui appartiennent.
