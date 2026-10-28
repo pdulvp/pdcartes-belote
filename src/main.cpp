@@ -5,6 +5,7 @@
 #include <QLocale>
 
 #include "CardDeck.h"
+#include "Fonts.h"
 #include "MainWindow.h"
 #include "Version.h"
 
@@ -51,6 +52,9 @@ int main(int argc, char *argv[]) {
     QLocale::setDefault(QLocale(QLocale::French, QLocale::France));
 
     ensureIconTheme();
+    // La fonte de tout ce qui se lit dans la fenêtre. Posée avant la première
+    // fenêtre : un widget garde la fonte qu'il avait en naissant.
+    dressApplicationFont();
 
     QCommandLineParser parser;
     parser.setApplicationDescription(

@@ -3,6 +3,7 @@
 #include "Annonces.h"
 #include "Belote.h"
 #include "FeltArt.h"
+#include "Fonts.h"
 #include "CardDeck.h"
 #include "TableLook.h"
 #include "Palette.h"
@@ -729,7 +730,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     painter->setBrush(partner ? mine : blendColours(scheme.surface, scheme.surfaceText, 0.12));
     painter->drawRoundedRect(chip, chip.height() / 2.0, chip.height() / 2.0);
     painter->setPen(partner ? readableTextOn(mine) : scheme.hint);
-    painter->drawText(chip, Qt::AlignCenter, role);
+    painter->drawText(capCentred(chip, tagMetrics), Qt::AlignCenter, role);
 
     QFont name = plainFont(painter);
     name.setBold(true);
@@ -874,7 +875,7 @@ void TableView::paintBidding(QPainter *painter) {
                                                                        QColor(Qt::white), 0.25)
                                                          : scheme.feltText)
                              : blendColours(scheme.feltText, scheme.felt, 0.3));
-        painter->drawText(badge, Qt::AlignCenter, contract);
+        painter->drawText(capCentred(badge, bigMetrics), Qt::AlignCenter, contract);
 
         painter->setFont(capsFont(painter, 11));
         painter->setPen(scheme.feltText);
@@ -945,7 +946,7 @@ void TableView::paintBidding(QPainter *painter) {
                                    : blendColours(scheme.feltEdge, scheme.surface, 0.30));
         painter->drawRoundedRect(chip, chip.height() / 2.0, chip.height() / 2.0);
         painter->setPen(speaking ? scheme.accentText : scheme.feltText);
-        painter->drawText(chip, Qt::AlignCenter, shown);
+        painter->drawText(capCentred(chip, saidMetrics), Qt::AlignCenter, shown);
     }
 }
 
@@ -1196,7 +1197,7 @@ void TableView::paintRail(QPainter *painter) {
         painter->setBrush(blendColours(scheme.feltEdge, scheme.surface, 0.26));
         painter->drawRoundedRect(badge, 12, 12);
         painter->setPen(scheme.feltText);
-        painter->drawText(badge, Qt::AlignCenter, text);
+        painter->drawText(capCentred(badge, metrics), Qt::AlignCenter, text);
         textLeft = badge.right() + 14.0;
     }
 
