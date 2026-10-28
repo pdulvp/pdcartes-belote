@@ -160,6 +160,10 @@ add_executable(pdcartes-belote
     # Le menu d'ouverture et les deux boîtes de dialogue.
     src/RivalCard.cpp
     src/RivalCard.h
+    # L'aperçu d'un adversaire, que la carte du menu et la plaque du tapis
+    # demandent l'une et l'autre au survol.
+    src/RivalGlance.cpp
+    src/RivalGlance.h
     src/TablePicker.cpp
     src/TablePicker.h
     src/SettingsDialog.cpp

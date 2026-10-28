@@ -106,6 +106,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     void leaveEvent(QEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 private:
     struct Spot {
@@ -151,6 +152,9 @@ private:
     void paintFlights(QPainter *painter);
 
     int cardAt(const QPointF &where) const;
+    // La place dont la plaque est sous le pointeur, ou -1 : c'est ce qui
+    // déclenche l'aperçu de l'adversaire qui y est assis.
+    int seatAt(const QPointF &where) const;
     // Une carte encore en l'air n'est pas dessinée à sa place : elle y serait
     // deux fois, une fois posée et une fois en vol, et on verrait double.
     bool flying(int cardId) const;
@@ -200,11 +204,15 @@ private:
 
     int m_chosen = -1;
     int m_hovered = -1;
+    int m_hoveredSeat = -1;
 
     QString m_line;
     bool m_trouble = false;
 
     QTimer *m_ticker = nullptr;
+    // Le maintien du pointeur sur une plaque avant que l'aperçu paraisse : un
+    // déplacement à travers la table n'en déclenche aucun.
+    QTimer *m_glanceBeat = nullptr;
     QVector<Flight> m_flights;
 
     // Où chaque carte de la main a été posée la dernière fois qu'on a disposé

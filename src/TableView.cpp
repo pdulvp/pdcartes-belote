@@ -7,6 +7,7 @@
 #include "CardDeck.h"
 #include "TableLook.h"
 #include "Palette.h"
+#include "RivalGlance.h"
 #include "Rivals.h"
 
 #include <QFontMetricsF>
@@ -169,6 +170,29 @@ TableView::TableView(QWidget *parent) : QWidget(parent) {
     m_ticker = new QTimer(this);
     m_ticker->setInterval(kFrameMs);
     connect(m_ticker, &QTimer::timeout, this, &TableView::tick);
+
+    // Aperçu d'un adversaire, affiché pendant le survol de sa plaque : sa
+    // façon de jouer et son expérience acquise, consultables sans quitter la
+    // donne en cours.
+    m_glanceBeat = new QTimer(this);
+    m_glanceBeat->setSingleShot(true);
+    m_glanceBeat->setInterval(kGlanceDelayMs);
+    connect(m_glanceBeat, &QTimer::timeout, this, [this] {
+        if (!m_game || m_hoveredSeat < 0) return;
+        const QString who = m_game->seat(m_hoveredSeat).rivalId;
+        if (who.isEmpty()) return;
+        for (const Spot &spot : m_seatBoxes) {
+            if (spot.id != m_hoveredSeat) continue;
+            // Position de la plaque en coordonnées d'écran : l'aperçu est
+            // affiché en dessous, sur le tapis, où il ne masque ni la plaque
+            // ni la main du joueur.
+            showRivalGlance(who,
+                            QRect(mapToGlobal(spot.box.topLeft().toPoint()),
+                                  spot.box.size().toSize()),
+                            this);
+            return;
+        }
+    });
 }
 
 void TableView::watch(const Belote *game) {
@@ -1371,6 +1395,13 @@ int TableView::cardAt(const QPointF &where) const {
     return -1;
 }
 
+int TableView::seatAt(const QPointF &where) const {
+    for (const Spot &spot : m_seatBoxes) {
+        if (spot.box.contains(where)) return spot.id;
+    }
+    return -1;
+}
+
 void TableView::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton) {
         clearChosen();
@@ -1391,8 +1422,20 @@ void TableView::mouseDoubleClickEvent(QMouseEvent *event) {
 }
 
 void TableView::mouseMoveEvent(QMouseEvent *event) {
-    const int card = cardAt(event->position());
-    if (card == m_hovered) return;
+    const QPointF where = event->position();
+    const int card = cardAt(where);
+    const int seat = seatAt(where);
+    if (card == m_hovered && seat == m_hoveredSeat) return;
+    if (seat != m_hoveredSeat) {
+        // Changement de plaque survolée, ou sortie de la plaque courante :
+        // l'aperçu est libéré -- il se referme si le pointeur l'a quitté, il
+        // subsiste si le pointeur est passé sur lui -- et la minuterie est
+        // relancée pour la plaque courante.
+        m_hoveredSeat = seat;
+        m_glanceBeat->stop();
+        releaseRivalGlance(this);
+        if (seat >= 0) m_glanceBeat->start();
+    }
     m_hovered = card;
     setCursor(card >= 0 ? Qt::PointingHandCursor : Qt::ArrowCursor);
     update();
@@ -1413,5 +1456,18 @@ void TableView::wheelEvent(QWheelEvent *event) {
 
 void TableView::leaveEvent(QEvent *) {
     m_hovered = -1;
+    m_hoveredSeat = -1;
+    m_glanceBeat->stop();
+    releaseRivalGlance(this);
     update();
+}
+
+void TableView::hideEvent(QHideEvent *event) {
+    // Retour au menu ou fermeture de la fenêtre : l'aperçu doit être fermé,
+    // faute de quoi il subsisterait à l'écran sans la table à laquelle il se
+    // rapporte.
+    m_hoveredSeat = -1;
+    m_glanceBeat->stop();
+    hideRivalGlance(this);
+    QWidget::hideEvent(event);
 }

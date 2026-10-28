@@ -4,6 +4,8 @@
 #include <QString>
 #include <QWidget>
 
+class QTimer;
+
 // La carte d'un joueur : son médaillon, son nom, son niveau, sa jauge, et ce
 // qu'il a fait sous ce profil-là.
 //
@@ -52,8 +54,13 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
     void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
 
 private:
+    // Le maintien du pointeur sur la carte avant que l'aperçu paraisse : un
+    // déplacement à travers les six n'en déclenche aucun.
+    QTimer *m_glanceBeat = nullptr;
+
     QString m_rivalId;
     QString m_seatNote;
     bool m_invited = false;
