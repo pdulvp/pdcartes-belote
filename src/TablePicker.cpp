@@ -2,6 +2,7 @@
 
 #include "Cards.h"
 #include "FeltArt.h"
+#include "Fonts.h"
 #include "MenuStyle.h"
 #include "NameDialog.h"
 #include "Palette.h"
@@ -13,6 +14,7 @@
 #include "TitleMark.h"
 
 #include <QAction>
+#include <QFontInfo>
 #include <QEasingCurve>
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
@@ -58,9 +60,19 @@ QColor goldLine(const Palette &scheme, qreal strength) {
     return line;
 }
 
-// Le titre d'une section : deux mots en capitales d'or, et un filet qui court
-// jusqu'au bout de la page. Une étiquette et une règle plutôt que la chrome
-// des dialogues, qui est faite pour un fond pâle.
+// Le titre d'une section : deux mots d'or en capitales, et un filet qui
+// court jusqu'au bout de la page. Une étiquette et une règle plutôt que la
+// chrome des dialogues, qui est faite pour un fond pâle.
+//
+// En Zen Dots, la fonte de la ligne du dessus du logo : les titres de section
+// sont ce que la page a de plus proche d'une enseigne, et les voir dans la
+// fonte du logo les rattache à lui. Elle n'a pas de bas-de-casse -- ses
+// minuscules sont ses capitales -- si bien que le texte source garde sa casse
+// ordinaire et que `AllUppercase` ne sert qu'au repli : sans la fonte, le
+// titre est en capitales quand même.
+//
+// De l'interlettrage, et un corps un peu réduit : Zen Dots est déjà large, et
+// des capitales serrées font un bloc plutôt que des mots.
 QWidget *feltSection(QWidget *parent, const QString &text) {
     auto *heading = new QWidget(parent);
     heading->setObjectName(QStringLiteral("feltSection"));
@@ -70,11 +82,10 @@ QWidget *feltSection(QWidget *parent, const QString &text) {
 
     auto *label = new QLabel(text, heading);
     label->setObjectName(QStringLiteral("feltSectionLabel"));
-    QFont caps = label->font();
-    caps.setBold(true);
+    const qreal body = QFontInfo(label->font()).pixelSize();
+    QFont caps = familyFont(label->font(), capsFamily(), body * 0.88);
     caps.setCapitalization(QFont::AllUppercase);
-    caps.setLetterSpacing(QFont::PercentageSpacing, 150);
-    if (caps.pointSizeF() > 0) caps.setPointSizeF(caps.pointSizeF() * 0.92);
+    caps.setLetterSpacing(QFont::PercentageSpacing, 118);
     label->setFont(caps);
 
     auto *rule = new QFrame(heading);
