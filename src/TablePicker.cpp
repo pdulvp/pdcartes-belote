@@ -54,12 +54,6 @@ constexpr int kHeadingGap = 10;
 // plus court que le vol : le menu est là quand le logo arrive, et non après.
 constexpr int kEntranceMs = 430;
 
-QColor goldLine(const Palette &scheme, qreal strength) {
-    QColor line = scheme.gold;
-    line.setAlphaF(strength);
-    return line;
-}
-
 // Le titre d'une section : deux mots d'or en capitales, et un filet qui
 // court jusqu'au bout de la page. Une étiquette et une règle plutôt que la
 // chrome des dialogues, qui est faite pour un fond pâle.
@@ -394,7 +388,7 @@ void TablePicker::refresh() {
         }
         if (auto *rule = heading->findChild<QFrame *>(QStringLiteral("feltSectionRule"))) {
             rule->setStyleSheet(QStringLiteral("background: %1; border: 0;")
-                                    .arg(goldLine(scheme, 0.28).name(QColor::HexArgb)));
+                                    .arg(feltGold(scheme, 0.28).name(QColor::HexArgb)));
         }
     }
 

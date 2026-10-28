@@ -207,6 +207,23 @@ const QPixmap &weaveTile(const Palette &scheme) {
 
 } // namespace
 
+QColor feltPlaqueFill(const Palette &scheme, qreal lift) {
+    QColor fill = blendColours(scheme.feltEdge, QColor(0, 0, 0), 0.52);
+    if (lift > 0.0) fill = blendColours(fill, scheme.gold, lift);
+    fill.setAlpha(205);
+    return fill;
+}
+
+QColor feltGold(const Palette &scheme, qreal strength) {
+    QColor line = scheme.gold;
+    line.setAlphaF(qBound(0.0, strength, 1.0));
+    return line;
+}
+
+QColor feltBarFace(const Palette &scheme) {
+    return blendColours(scheme.feltEdge, QColor(0, 0, 0), 0.46);
+}
+
 void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme, bool braid) {
     painter->save();
     painter->setPen(Qt::NoPen);
