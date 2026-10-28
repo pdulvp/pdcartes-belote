@@ -32,6 +32,27 @@ constexpr qreal kHandHeight = 178.0;
 constexpr qreal kMargin = 14.0;
 constexpr qreal kGap = 10.0;
 
+// Les corps de texte d'une plaque, et la hauteur utile où ils valent. Ce
+// sont ceux de la carte du même joueur dans le menu d'ouverture
+// (`RivalCard`) : c'est la même personne décrite de la même manière, et la
+// lire plus gros à la table qu'au menu la fait passer pour deux objets.
+constexpr int kPlaqueNameSize = 15;
+constexpr int kPlaqueAsideSize = 11;
+constexpr int kPlaqueBadgeSize = 10;
+// Ce qui reste d'une plaque quand on lui a retiré ses marges du haut et du
+// bas, la fenêtre lui laissant toute sa place.
+constexpr qreal kPlaqueInnerFull = kSeatsHeight - 14.0;
+
+// Le corps d'un texte de plaque, à la hauteur qu'elle a. La rangée des
+// plaques se réduit avec la fenêtre (`min(kSeatsHeight, hauteur * 0.21)`), et
+// un corps fixe y déborderait : le texte garde donc sa réduction. Ce qu'il
+// n'a plus, c'est le droit de grandir -- la taille du menu est un plafond, et
+// non une valeur de départ qu'une plaque entière multipliait par un cinquième.
+int plaqueTextSize(qreal innerHeight, int atFullHeight, int floor) {
+    const qreal scale = std::min(1.0, innerHeight / kPlaqueInnerFull);
+    return std::max(floor, int(std::lround(atFullHeight * scale)));
+}
+
 // La plus large qu'une plaque soit dessinée, et la plus étroite qu'on accepte
 // de la faire pour la poser sur le côté : en dessous, le nom et « contre
 // vous » ne tiennent plus l'un à côté de l'autre.
@@ -731,7 +752,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     // c'est elle qui décide de la place qui reste au nom.
     QFont tag = plainFont(painter);
     tag.setBold(true);
-    tag.setPixelSize(int(std::clamp(inner.height() * 0.165, 9.0, 11.0)));
+    tag.setPixelSize(plaqueTextSize(inner.height(), kPlaqueBadgeSize, 9));
     tag.setCapitalization(QFont::AllUppercase);
     painter->setFont(tag);
     const QFontMetricsF tagMetrics(tag);
@@ -746,7 +767,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
 
     QFont name = plainFont(painter);
     name.setBold(true);
-    name.setPixelSize(int(std::clamp(inner.height() * 0.215, 11.0, 17.0)));
+    name.setPixelSize(plaqueTextSize(inner.height(), kPlaqueNameSize, 11));
     painter->setFont(name);
     painter->setPen(plaqueInk(scheme));
     const QFontMetricsF nameMetrics(name);
@@ -762,7 +783,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
         const Learning learning = learningFor(seat.rivalId);
         const Level level = levelOf(learning.xp);
         QFont small = plainFont(painter);
-        small.setPixelSize(int(std::clamp(inner.height() * 0.185, 9.0, 12.0)));
+        small.setPixelSize(plaqueTextSize(inner.height(), kPlaqueAsideSize, 9));
         painter->setFont(small);
         const QFontMetricsF smallMetrics(small);
 
@@ -816,7 +837,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     const int points = annonceTotal(seat.annonces);
     QFont mark = plainFont(painter);
     mark.setBold(true);
-    mark.setPixelSize(int(std::clamp(inner.height() * 0.19, 10.0, 13.0)));
+    mark.setPixelSize(plaqueTextSize(inner.height(), kPlaqueAsideSize + 1, 10));
     painter->setFont(mark);
     const QFontMetricsF markMetrics(mark);
     const QString shown = tr("+%1").arg(points);
