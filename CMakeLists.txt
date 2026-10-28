@@ -69,6 +69,36 @@ add_custom_target(build-version ALL
     COMMENT "Stamping the build with the time it was made")
 set_source_files_properties(${BUILD_VERSION_CPP} PROPERTIES GENERATED TRUE)
 
+# Adresses affichées par l'application, définies dans un fichier de
+# propriétés plutôt que dans le code de la fenêtre des réglages qui les
+# affiche.
+#
+# Elles sont lues ici et compilées dans le binaire, comme l'est le numéro de
+# version : aucun fichier n'est à installer auprès de l'application ni à lire
+# au démarrage, et aucune valeur de repli n'a donc à être prévue. Comme pour
+# `VERSION`, toute modification du fichier déclenche une reconfiguration.
+set(PDCARTES_BELOTE_LINKS "${CMAKE_CURRENT_SOURCE_DIR}/data/links.ini")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${PDCARTES_BELOTE_LINKS}")
+
+# Lit une ligne « clé = adresse » du fichier. Si la clé est absente, la
+# configuration échoue : une adresse manquante ferait disparaître le lien de
+# la fenêtre des réglages sans message d'erreur.
+function(pdcartes_belote_link key out)
+    file(STRINGS "${PDCARTES_BELOTE_LINKS}" _found REGEX "^[ \t]*${key}[ \t]*=")
+    if(NOT _found)
+        message(FATAL_ERROR
+            "data/links.ini: pas d'adresse pour la clé « ${key} »")
+    endif()
+    list(GET _found 0 _line)
+    string(REGEX REPLACE "^[ \t]*${key}[ \t]*=[ \t]*" "" _value "${_line}")
+    string(STRIP "${_value}" _value)
+    set(${out} "${_value}" PARENT_SCOPE)
+endfunction()
+
+pdcartes_belote_link("editeur-de-cartes" PDCARTES_BELOTE_LINK_CARD_EDITOR)
+configure_file(src/Links.h.in ${CMAKE_CURRENT_BINARY_DIR}/Links.h @ONLY)
+
 add_executable(pdcartes-belote
     ${BUILD_VERSION_CPP}
     src/Version.h
@@ -231,6 +261,9 @@ qt_add_resources(pdcartes-belote "icone-du-jeu"
         assets/icon/pdcartes-belote-64.png
         assets/icon/pdcartes-belote-128.png
         assets/icon/pdcartes-belote-256.png)
+
+# Nécessaire pour trouver `Links.h`, généré ci-dessus dans ce répertoire.
+target_include_directories(pdcartes-belote PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(pdcartes-belote PRIVATE cartotheque Qt6::Widgets)
 
