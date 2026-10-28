@@ -1,6 +1,6 @@
 #include "SettingsDialog.h"
 
-#include "CardArt.h"
+#include "FeltArt.h"
 #include "CardDeck.h"
 #include "DialogChrome.h"
 #include "Palette.h"

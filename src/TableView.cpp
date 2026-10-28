@@ -2,7 +2,7 @@
 
 #include "Annonces.h"
 #include "Belote.h"
-#include "CardArt.h"
+#include "FeltArt.h"
 #include "CardDeck.h"
 #include "TableLook.h"
 #include "Palette.h"

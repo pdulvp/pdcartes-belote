@@ -1,6 +1,6 @@
 #include "TablePage.h"
 
-#include "CardArt.h"
+#include "FeltArt.h"
 #include "Palette.h"
 #include "Profiles.h"
 #include "Rivals.h"

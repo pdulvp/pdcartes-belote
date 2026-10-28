@@ -1,5 +1,7 @@
 #include "Cards.h"
 
+#include "CardArt.h"
+
 #include <QCoreApplication>
 #include <QRandomGenerator>
 
@@ -66,7 +68,10 @@ void shuffleCards(QVector<Card> &cards) {
     }
 }
 
-bool isRed(Suit suit) { return suit == Suit::Coeur || suit == Suit::Carreau; }
+// Les deux fonctions suivantes délèguent à la cartothèque, qui dessine les
+// cartes et a donc les mêmes questions à résoudre : deux tables des rangs
+// finiraient par diverger.
+bool isRed(Suit suit) { return cardSuitIsRed(int(suit)); }
 
 QString suitPip(Suit suit) {
     switch (suit) {
@@ -94,16 +99,10 @@ QString suitWithArticle(Suit suit) {
     return QCoreApplication::translate("cards", "à %1").arg(suitName(suit));
 }
 
-QString rankLabel(int rank) {
-    switch (rank) {
-    case kAs: return QCoreApplication::translate("cards", "A");
-    case kRoi: return QCoreApplication::translate("cards", "R");
-    case kDame: return QCoreApplication::translate("cards", "D");
-    case kValet: return QCoreApplication::translate("cards", "V");
-    default: break;
-    }
-    return QString::number(rank);
-}
+// La cartothèque range l'as à 1, comme un jeu de cartes ordinaire ; la
+// belote le compte en haut, au-dessus du roi. La traduction se fait ici,
+// comme partout où un rang de belote sort du programme.
+QString rankLabel(int rank) { return cardRankLabel(rank == kAs ? 1 : rank); }
 
 QString cardLabel(const Card &card) {
     if (!card.valid()) return QString();
