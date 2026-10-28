@@ -21,6 +21,30 @@ include(GNUInstallDirs)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
 
+# En croisant la compilation : les outils de Qt sont des programmes, et un
+# programme Windows ne tourne pas sur la machine qui compile.
+#
+# Le Qt officiel pour Windows est un Qt natif -- bâti là-bas, pour là-bas --
+# et ses outils sont donc des .exe. Il ne sait pas non plus qu'on le croise,
+# si bien que QT_HOST_PATH, qui est la façon prévue de dire « les outils, va
+# les prendre ici », le laisse indifférent. On les lui désigne un par un. Les
+# deux Qt portent la même version, ce qui est exigé par ailleurs : le moc
+# d'ici produit du code que les en-têtes de là-bas acceptent.
+if(CMAKE_CROSSCOMPILING AND QT_HOST_PATH)
+    foreach(tool moc rcc uic)
+        if(NOT TARGET Qt6::${tool})
+            continue()
+        endif()
+        find_program(QT_HOST_TOOL_${tool} NAMES ${tool}
+            HINTS "${QT_HOST_PATH}/lib/qt6/libexec" "${QT_HOST_PATH}/libexec/qt6"
+                  "${QT_HOST_PATH}/lib/x86_64-linux-gnu/qt6/libexec"
+                  "${QT_HOST_PATH}/bin"
+            REQUIRED)
+        set_property(TARGET Qt6::${tool} PROPERTY IMPORTED_LOCATION
+                     "${QT_HOST_TOOL_${tool}}")
+    endforeach()
+endif()
+
 # La cartothèque : le format des jeux de cartes, la liste de ceux qui sont
 # installés, et le style que les jeux de la maison recopiaient chacun de son
 # côté. Bibliothèque statique : elle entre dans le binaire, et le jeu reste un
@@ -112,13 +136,104 @@ add_dependencies(pdcartes-belote build-version)
 
 target_link_libraries(pdcartes-belote PRIVATE cartotheque Qt6::Widgets)
 
-install(TARGETS pdcartes-belote RUNTIME DESTINATION bin)
+# Sur Windows, un programme à fenêtres et non un programme de console : sans
+# cela une console noire s'ouvre derrière le tapis et reste là.
+set_target_properties(pdcartes-belote PROPERTIES WIN32_EXECUTABLE ON)
+
+# Là-bas l'exe est à la racine du dossier, avec ses DLL autour -- c'est ce
+# qu'attend quelqu'un qui décompresse un jeu ; ici, dans bin.
+if(WIN32)
+    install(TARGETS pdcartes-belote RUNTIME DESTINATION .)
+else()
+    install(TARGETS pdcartes-belote RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 # Pour qu'un shell de bureau puisse dire à quelle application une fenêtre
 # appartient. Le nom du fichier doit être celui de l'app_id que l'application
 # pose avec setDesktopFileName().
-install(FILES data/pdcartes-belote.desktop
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+if(UNIX AND NOT APPLE)
+    install(FILES data/pdcartes-belote.desktop
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+endif()
+
+# ---------------------------------------------------------------------------
+# Windows : ce qu'il faut à côté de l'exe, et le zip qui les emporte.
+#
+# Pas de windeployqt ici, qui est un programme Windows et ne tourne pas sur la
+# machine qui compile : la liste est écrite, ce qui a l'avantage de dire tout
+# haut de quoi le jeu dépend. Trois DLL de Qt, le greffon de la plateforme --
+# sans lui le programme s'arrête en disant qu'il ne trouve pas « windows » --
+# celui du style, les formats d'image que la cartothèque sait lire, et les
+# trois DLL du compilateur.
+#
+# Le compilateur et les deux Qt en jeu sont décrits dans
+# cmake/mingw-w64.cmake, qui est le fichier de chaîne à passer :
+#
+#     cmake -B build-win -DCMAKE_TOOLCHAIN_FILE=cmake/mingw-w64.cmake \
+#           -DCMAKE_PREFIX_PATH=/chemin/vers/qt6/6.8.2/mingw_64 \
+#           -DQT_HOST_PATH=/usr
+#     cmake --build build-win --target zip
+if(WIN32)
+    # Où Qt a posé ses affaires, dit par Qt lui-même plutôt que deviné.
+    set(QT_BIN "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}")
+    set(QT_PLUGINS "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_PLUGINS}")
+
+    install(FILES
+        "${QT_BIN}/Qt6Core.dll"
+        "${QT_BIN}/Qt6Gui.dll"
+        "${QT_BIN}/Qt6Widgets.dll"
+        DESTINATION .)
+    # Les icônes des boutons du haut viennent du thème du bureau, et un thème
+    # actuel les livre en SVG : un SVG se lit par un greffon qui dépend de
+    # cette bibliothèque-là. Sans elle le greffon ne se charge pas, et les
+    # boutons seraient nus -- sans un mot, puisqu'une icône absente n'est pas
+    # une erreur.
+    if(EXISTS "${QT_BIN}/Qt6Svg.dll")
+        install(FILES "${QT_BIN}/Qt6Svg.dll" DESTINATION .)
+    endif()
+    install(FILES "${QT_PLUGINS}/platforms/qwindows.dll" DESTINATION platforms)
+    install(FILES "${QT_PLUGINS}/styles/qmodernwindowsstyle.dll" DESTINATION styles)
+    install(DIRECTORY "${QT_PLUGINS}/imageformats/" DESTINATION imageformats
+            FILES_MATCHING PATTERN "*.dll")
+
+    # Celles du compilateur, quand c'est le mingw de Debian qui a compilé :
+    # Qt officiel en dépend autant que le jeu.
+    foreach(_runtime libstdc++-6 libgcc_s_seh-1)
+        if(EXISTS "${MINGW_RUNTIME_DIR}/${_runtime}.dll")
+            install(FILES "${MINGW_RUNTIME_DIR}/${_runtime}.dll" DESTINATION .)
+        endif()
+    endforeach()
+    if(EXISTS "${MINGW_SYSROOT_LIB}/libwinpthread-1.dll")
+        install(FILES "${MINGW_SYSROOT_LIB}/libwinpthread-1.dll" DESTINATION .)
+    endif()
+
+    set(CPACK_GENERATOR "ZIP")
+    set(CPACK_PACKAGE_NAME "pdcartes-belote")
+    set(CPACK_PACKAGE_VERSION "${PDCARTES_BELOTE_VERSION}")
+    # L'archive porte la version et l'empreinte du build, comme le paquet
+    # Debian porte la sienne. Le nom se décide au moment de l'empaquetage et
+    # non ici -- l'empreinte n'est écrite qu'à la construction, et celle de la
+    # configuration a des semaines de builds de retard ; voir
+    # cmake/CPackOptions.cmake. Ce nom-ci n'est que le recours, si l'empreinte
+    # manque.
+    set(CPACK_PACKAGE_FILE_NAME "pdcartes-belote-${PDCARTES_BELOTE_VERSION}-windows-x86_64")
+    set(CPACK_BUILD_VERSION_FILE "${BUILD_VERSION_TXT}")
+    set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPackOptions.cmake")
+    # L'exe et ses DLL à la racine de l'archive, et non dans un dossier de
+    # plus : le dossier, c'est celui où l'on décompresse.
+    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+    include(CPack)
+
+    # Un pas du dossier de travail à l'archive, comme la cible deb de l'autre
+    # côté : `cmake --build build-win --target zip`.
+    add_custom_target(zip
+        COMMAND ${CMAKE_COMMAND} -E env PDCARTES_BELOTE_KEEP_VERSION=1
+            ${CMAKE_CPACK_COMMAND} -G ZIP --config ${CMAKE_CURRENT_BINARY_DIR}/CPackConfig.cmake
+        DEPENDS pdcartes-belote
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Fabrication de l'archive Windows")
+    return()
+endif()
 
 # Le paquet Debian : `cmake --build build --target deb`.
 set(CPACK_GENERATOR "DEB")

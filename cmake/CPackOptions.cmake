@@ -9,5 +9,13 @@ if(EXISTS "${CPACK_BUILD_VERSION_FILE}")
     string(STRIP "${_pdcartes_belote_build}" _pdcartes_belote_build)
     if(_pdcartes_belote_build)
         set(CPACK_DEBIAN_PACKAGE_RELEASE "${_pdcartes_belote_build}")
+        # Le paquet Debian porte l'empreinte dans son numéro de version, que
+        # dpkg comprend ; une archive n'a pas de numéro de version, elle n'a
+        # qu'un nom -- alors l'empreinte y va, à la même place et dans le même
+        # ordre : pdcartes-belote-1.0.0-261028201232-windows-x86_64.zip.
+        if(CPACK_GENERATOR STREQUAL "ZIP")
+            set(CPACK_PACKAGE_FILE_NAME
+                "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${_pdcartes_belote_build}-windows-x86_64")
+        endif()
     endif()
 endif()
