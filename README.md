@@ -281,7 +281,7 @@ de cartes ordinaire, et la traduction se fait en arrivant.
 ```sh
 cmake -S . -B build
 cmake --build build --parallel
-./build/belotesol
+./build/pdcartes-belote
 ```
 
 Un paquet Debian : `cmake --build build --target deb`.

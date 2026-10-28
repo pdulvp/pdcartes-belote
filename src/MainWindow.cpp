@@ -62,7 +62,7 @@ void inkLabel(QLabel *label, const QColor &colour) {
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    setWindowTitle(tr("Belotesol"));
+    setWindowTitle(tr("pdcartes-belote"));
 
     readSettings();
     // Le drap du profil, et ses cartes : tous deux lui appartiennent.
@@ -104,7 +104,7 @@ QWidget *MainWindow::buildTopBar() {
     m_topBar->setObjectName(QStringLiteral("topBar"));
     m_topBar->setFixedHeight(kTopBarHeight);
 
-    m_title = new QLabel(tr("Belotesol"), m_topBar);
+    m_title = new QLabel(tr("pdcartes-belote"), m_topBar);
     QFont name = m_title->font();
     name.setBold(true);
     if (name.pointSizeF() > 0) name.setPointSizeF(name.pointSizeF() * 1.22);
@@ -203,7 +203,7 @@ void MainWindow::askLeaveMatch() {
     const Phase phase = m_table->game()->phase();
     if (m_table->playing() && phase != Phase::MatchOver) {
         const auto answer =
-            QMessageBox::question(this, tr("Belotesol"),
+            QMessageBox::question(this, tr("pdcartes-belote"),
                                   tr("La partie en cours sera perdue. Revenir au menu ?"),
                                   QMessageBox::Cancel | QMessageBox::Yes);
         if (answer != QMessageBox::Yes) return;
@@ -299,7 +299,7 @@ void MainWindow::renameProfile(int slot) {
 void MainWindow::askForgetProfile(int slot) {
     const ProfileRecord record = profileRecord(slot);
     const auto answer = QMessageBox::question(
-        this, tr("Belotesol"),
+        this, tr("pdcartes-belote"),
         tr("Effacer les parties de « %1 » et remettre les six joueurs au niveau avec lequel "
            "ils arrivent ? Les deux autres profils ne sont pas touchés.")
             .arg(record.name),

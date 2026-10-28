@@ -53,7 +53,7 @@ TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
     rows->setContentsMargins(30, 24, 30, 26);
     rows->setSpacing(0);
 
-    m_title = heading(page, tr("Belotesol"), 2.1, true);
+    m_title = heading(page, tr("pdcartes-belote"), 2.1, true);
     m_subtitle = heading(page, tr("La belote, à quatre et sur tapis vert, avec un partenaire "
                                   "qui apprend d'une partie à l'autre."),
                          1.0, false);
@@ -173,7 +173,7 @@ void TablePicker::renameRival(const QString &rivalId) {
 void TablePicker::askResetRival(const QString &rivalId) {
     const Rival &who = rivalById(rivalId);
     const auto answer = QMessageBox::question(
-        this, tr("Belotesol"),
+        this, tr("pdcartes-belote"),
         tr("Remettre %1 à %2 points d'expérience (%3), sur « %4 » ?")
             .arg(rivalName(rivalId))
             .arg(who.startXp)

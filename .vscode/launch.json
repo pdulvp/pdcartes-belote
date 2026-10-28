@@ -8,10 +8,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Belotesol",
+            "name": "pdcartes-belote",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/belotesol",
+            "program": "${workspaceFolder}/build/pdcartes-belote",
             "args": [],
             "cwd": "${workspaceFolder}",
             "environment": [],

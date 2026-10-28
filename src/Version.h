@@ -12,11 +12,11 @@
 //
 // Les deux sont définis dans un fichier écrit à chaque build ; voir
 // cmake/GenerateVersion.cmake.
-extern const char *const kBelotesolVersion;
-extern const char *const kBelotesolBuildVersion;
+extern const char *const kPdcartesBeloteVersion;
+extern const char *const kPdcartesBeloteBuildVersion;
 
-inline QString appVersion() { return QString::fromLatin1(kBelotesolVersion); }
-inline QString buildVersion() { return QString::fromLatin1(kBelotesolBuildVersion); }
+inline QString appVersion() { return QString::fromLatin1(kPdcartesBeloteVersion); }
+inline QString buildVersion() { return QString::fromLatin1(kPdcartesBeloteBuildVersion); }
 
 // Les deux ensemble, pour une ligne qui a la place des deux.
 inline QString fullVersion() {

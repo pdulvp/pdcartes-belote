@@ -32,7 +32,7 @@
             "dependsOn": ["Configure"],
             "group": "build",
             "problemMatcher": ["$gcc"],
-            "detail": "Builds, then packs build/belotesol_<version>-<build>_<arch>.deb"
+            "detail": "Builds, then packs build/pdcartes-belote_<version>-<build>_<arch>.deb"
         }
     ]
 }
