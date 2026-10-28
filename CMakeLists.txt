@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.16)
 # La version, en un seul endroit et sous la forme la plus simple qui soit :
 # trois nombres dans un fichier, que la publication avance et que rien n'a
 # besoin d'aller extraire du code.
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" BELOTESOL_VERSION)
-string(STRIP "${BELOTESOL_VERSION}" BELOTESOL_VERSION)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" PDCARTES_BELOTE_VERSION)
+string(STRIP "${PDCARTES_BELOTE_VERSION}" PDCARTES_BELOTE_VERSION)
 
-project(belotesol VERSION ${BELOTESOL_VERSION} LANGUAGES CXX)
+project(pdcartes-belote VERSION ${PDCARTES_BELOTE_VERSION} LANGUAGES CXX)
 
 # Pour qu'avancer la version suffise : le build suivant reconfigure plutôt que
 # de porter le numéro d'hier.
@@ -23,8 +23,8 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
 
 # La cartothèque : le format des jeux de cartes, la liste de ceux qui sont
 # installés, et le style que les jeux de la maison recopiaient chacun de son
-# côté. Bibliothèque statique : elle entre dans le binaire, et belotesol reste
-# un exécutable et rien d'autre.
+# côté. Bibliothèque statique : elle entre dans le binaire, et le jeu reste un
+# exécutable et rien d'autre.
 add_subdirectory(../cartes-set-creator/lib cartotheque)
 
 # Quel build c'est. Écrit à chaque build plutôt qu'à chaque configure, pour que
@@ -35,17 +35,17 @@ set(BUILD_VERSION_TXT ${CMAKE_CURRENT_BINARY_DIR}/BuildVersion.txt)
 set(GENERATE_VERSION ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake)
 
 # Une fois maintenant, pour que le fichier existe avant que rien soit compilé.
-execute_process(COMMAND ${CMAKE_COMMAND} -DVERSION=${BELOTESOL_VERSION}
+execute_process(COMMAND ${CMAKE_COMMAND} -DVERSION=${PDCARTES_BELOTE_VERSION}
     -DOUT_CPP=${BUILD_VERSION_CPP} -DOUT_TXT=${BUILD_VERSION_TXT} -P ${GENERATE_VERSION})
 
 add_custom_target(build-version ALL
     BYPRODUCTS ${BUILD_VERSION_CPP} ${BUILD_VERSION_TXT}
-    COMMAND ${CMAKE_COMMAND} -DVERSION=${BELOTESOL_VERSION}
+    COMMAND ${CMAKE_COMMAND} -DVERSION=${PDCARTES_BELOTE_VERSION}
         -DOUT_CPP=${BUILD_VERSION_CPP} -DOUT_TXT=${BUILD_VERSION_TXT} -P ${GENERATE_VERSION}
     COMMENT "Stamping the build with the time it was made")
 set_source_files_properties(${BUILD_VERSION_CPP} PROPERTIES GENERATED TRUE)
 
-add_executable(belotesol
+add_executable(pdcartes-belote
     ${BUILD_VERSION_CPP}
     src/Version.h
     src/main.cpp
@@ -108,22 +108,22 @@ add_executable(belotesol
 
 # Pour que le tampon soit écrit avant que les sources qui le portent soient
 # compilées.
-add_dependencies(belotesol build-version)
+add_dependencies(pdcartes-belote build-version)
 
-target_link_libraries(belotesol PRIVATE cartotheque Qt6::Widgets)
+target_link_libraries(pdcartes-belote PRIVATE cartotheque Qt6::Widgets)
 
-install(TARGETS belotesol RUNTIME DESTINATION bin)
+install(TARGETS pdcartes-belote RUNTIME DESTINATION bin)
 
 # Pour qu'un shell de bureau puisse dire à quelle application une fenêtre
 # appartient. Le nom du fichier doit être celui de l'app_id que l'application
 # pose avec setDesktopFileName().
-install(FILES data/belotesol.desktop
+install(FILES data/pdcartes-belote.desktop
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
 
 # Le paquet Debian : `cmake --build build --target deb`.
 set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_NAME "belotesol")
-set(CPACK_PACKAGE_VENDOR "belotesol")
+set(CPACK_PACKAGE_NAME "pdcartes-belote")
+set(CPACK_PACKAGE_VENDOR "pdcartes-belote")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "La belote sur tapis vert, à quatre autour de la table")
 # Une seule chaîne, et non trois : une liste arriverait dans le fichier control
 # avec les points-virgules qui la joignent encore en place.
@@ -153,13 +153,13 @@ set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPackOptions.cm
 # La version est celle du projet ; le tampon du build part comme release
 # Debian, pour que deux paquets de 1.0.0 construits des jours différents soient
 # distingués et que le plus tardif soit le plus récent.
-set(CPACK_PACKAGE_VERSION "${BELOTESOL_VERSION}")
+set(CPACK_PACKAGE_VERSION "${PDCARTES_BELOTE_VERSION}")
 include(CPack)
 
 # Un seul pas d'un arbre de travail à un paquet.
 add_custom_target(deb
-    COMMAND ${CMAKE_COMMAND} -E env BELOTESOL_KEEP_VERSION=1
+    COMMAND ${CMAKE_COMMAND} -E env PDCARTES_BELOTE_KEEP_VERSION=1
         ${CMAKE_CPACK_COMMAND} -G DEB --config ${CMAKE_CURRENT_BINARY_DIR}/CPackConfig.cmake
-    DEPENDS belotesol
+    DEPENDS pdcartes-belote
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building the Debian package")

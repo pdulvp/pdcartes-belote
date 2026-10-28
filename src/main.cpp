@@ -37,14 +37,14 @@ void ensureIconTheme() {
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    QApplication::setOrganizationName("belotesol");
-    QApplication::setApplicationName("belotesol");
+    QApplication::setOrganizationName("pdcartes-belote");
+    QApplication::setApplicationName("pdcartes-belote");
     QApplication::setApplicationVersion(fullVersion());
     // Ce sous quoi le bureau connaît cette application. Sous Wayland c'est
     // l'app_id de la fenêtre, et un shell le rapproche du fichier .desktop du
     // même nom pour savoir à quelle application une fenêtre appartient -- ce
     // qui est ce qui permet de l'épingler.
-    QApplication::setDesktopFileName(QStringLiteral("belotesol"));
+    QApplication::setDesktopFileName(QStringLiteral("pdcartes-belote"));
 
     // Le jeu est en français, donc ses nombres et ses dates le sont aussi,
     // quoi que la machine soit réglée.
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
     QCommandLineParser parser;
     parser.setApplicationDescription(
-        QCoreApplication::translate("main", "Belotesol — la belote sur tapis vert."));
+        QCoreApplication::translate("main", "pdcartes-belote — la belote sur tapis vert."));
     parser.addHelpOption();
     parser.addVersionOption();
     parser.process(app);

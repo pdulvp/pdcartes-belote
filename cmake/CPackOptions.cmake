@@ -5,9 +5,9 @@
 # builds ago.
 
 if(EXISTS "${CPACK_BUILD_VERSION_FILE}")
-    file(READ "${CPACK_BUILD_VERSION_FILE}" _belotesol_build)
-    string(STRIP "${_belotesol_build}" _belotesol_build)
-    if(_belotesol_build)
-        set(CPACK_DEBIAN_PACKAGE_RELEASE "${_belotesol_build}")
+    file(READ "${CPACK_BUILD_VERSION_FILE}" _pdcartes_belote_build)
+    string(STRIP "${_pdcartes_belote_build}" _pdcartes_belote_build)
+    if(_pdcartes_belote_build)
+        set(CPACK_DEBIAN_PACKAGE_RELEASE "${_pdcartes_belote_build}")
     endif()
 endif()

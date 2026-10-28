@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Belotesol
+Name=pdcartes-belote
 GenericName=Belote
 Comment=La belote sur tapis vert, à quatre autour de la table
-Exec=belotesol
+Exec=pdcartes-belote
 Icon=applications-games
 Terminal=false
 Categories=Game;CardGame;
@@ -11,4 +11,4 @@ Keywords=belote;cartes;jeu;atout;pli;contrat;tapis;
 # Rapproché du WM_CLASS d'une fenêtre sous X11 ou XWayland. Sous Wayland c'est
 # l'app_id posé par setDesktopFileName() qui est rapproché à la place, et il
 # est rapproché de ce fichier par son nom.
-StartupWMClass=belotesol
+StartupWMClass=pdcartes-belote

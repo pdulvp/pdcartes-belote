@@ -1,4 +1,4 @@
-# Belotesol
+# pdcartes-belote
 
 La belote française, écrite en C++17 avec Qt 6, jouée sur un tapis vert à
 quatre — vous, un partenaire en face, et deux adversaires qui apprennent d'une
@@ -281,7 +281,7 @@ de cartes ordinaire, et la traduction se fait en arrivant.
 ```sh
 cmake -S . -B build
 cmake --build build --parallel
-./build/belotesol
+./build/pdcartes-belote
 ```
 
 Un paquet Debian : `cmake --build build --target deb`.
