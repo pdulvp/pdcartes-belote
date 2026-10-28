@@ -1,10 +1,10 @@
 # What the game says about itself: the version it was given, and the moment
 # this particular build was made.
 #
-# The version comes from the VERSION file, moved on by hand (or by the bump
-# tasks); the stamp is taken here at every build, so that two builds of the
-# same version are still told apart -- which is what a version alone cannot
-# do for something that is rebuilt rather than released.
+# The version comes from the VERSION file, moved on at release time; the
+# stamp is taken here at every build, so that two builds of the same version
+# are still told apart -- which is what a version alone cannot do for
+# something that is rebuilt rather than released.
 #
 # Written in two forms: a source file for the program to carry, and a bare
 # line for the packaging to read, cpack running long after the compiler has

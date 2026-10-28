@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 # La version, en un seul endroit et sous la forme la plus simple qui soit :
-# trois nombres dans un fichier, que les tâches de bump avancent et que rien
-# n'a besoin d'aller extraire du code.
+# trois nombres dans un fichier, que la publication avance et que rien n'a
+# besoin d'aller extraire du code.
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" BELOTESOL_VERSION)
 string(STRIP "${BELOTESOL_VERSION}" BELOTESOL_VERSION)
 
