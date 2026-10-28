@@ -1,24 +1,24 @@
-# What the game says about itself: the version it was given, and the moment
-# this particular build was made.
+# Ce que le jeu dit de lui-même : la version qu'on lui a donnée, et l'instant
+# où ce build-ci a été fait.
 #
-# The version comes from the VERSION file, moved on at release time; the
-# stamp is taken here at every build, so that two builds of the same version
-# are still told apart -- which is what a version alone cannot do for
-# something that is rebuilt rather than released.
+# La version vient du fichier VERSION, avancé au moment de publier ; le
+# tampon est pris ici à chaque build, de sorte que deux builds d'une même
+# version restent distingués -- ce qu'une version seule ne peut pas faire
+# pour une chose qu'on reconstruit plutôt qu'on ne publie.
 #
-# Written in two forms: a source file for the program to carry, and a bare
-# line for the packaging to read, cpack running long after the compiler has
-# finished.
+# Écrit sous deux formes : un fichier source que le programme emporte, et une
+# ligne nue que l'empaquetage lit, cpack tournant longtemps après que le
+# compilateur a fini.
 #
 # Avec RELEASE, pas d'empreinte du tout : une version se nomme par son numéro
 # et rien d'autre, et deux paquets d'une même version n'ont pas à se
 # distinguer -- il n'y en a qu'un. C'est la cible release qui le demande, et
 # elle seule ; voir CMakeLists.txt.
 
-# Packaging builds the program again from inside cpack, after cpack has read
-# the version it is naming the package with. Stamping it again there would
-# put one version on the package and a later one in the binary inside it, so
-# while packaging the stamp is left alone.
+# L'empaquetage reconstruit le programme depuis cpack, après que cpack a lu
+# la version dont il nomme le paquet. Retamponner là mettrait une version sur
+# le paquet et une plus tardive dans le binaire qui est dedans : le tampon
+# est donc laissé tranquille pendant l'empaquetage.
 if(DEFINED ENV{PDCARTES_BELOTE_KEEP_VERSION} AND EXISTS "${OUT_TXT}")
     return()
 endif()
@@ -30,11 +30,11 @@ else()
 endif()
 
 file(WRITE "${OUT_CPP}"
-"// Written at every build by cmake/GenerateVersion.cmake. Not to be edited,
-// and not to be checked in: it is this build, not this source.
+"// Écrit à chaque build par cmake/GenerateVersion.cmake. Ne pas modifier, et
+// ne pas versionner : c'est ce build-ci, et non cette source-ci.
 //
-// extern, because a const at namespace scope is this file's own otherwise,
-// and the program is to read them from elsewhere.
+// extern, parce qu'une constante de portée fichier appartiendrait sinon à ce
+// fichier seul, alors que le programme doit les lire d'ailleurs.
 extern const char *const kPdcartesBeloteVersion;
 const char *const kPdcartesBeloteVersion = \"${VERSION}\";
 extern const char *const kPdcartesBeloteBuildVersion;

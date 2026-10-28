@@ -1,10 +1,11 @@
 {
-    // Everything there is to do with this project, in the Run and Debug list
-    // so that it is one dropdown and F5 rather than two menus.
+    // Tout ce qu'il y a à faire sur ce projet, dans la liste « Exécuter et
+    // déboguer » : une liste déroulante et F5, plutôt que deux menus.
     //
-    // The first starts the game under gdb. The rest are commands run in a
-    // terminal: "node-terminal" is the way VS Code's own launcher runs one,
-    // and nothing about them is JavaScript -- it is the shell.
+    // La première entrée lance le jeu sous gdb. Les autres sont des commandes
+    // passées dans un terminal : « node-terminal » est la façon dont le
+    // lanceur de VS Code en ouvre un, et rien là-dedans n'est du JavaScript
+    // -- c'est le shell.
     "version": "0.2.0",
     "configurations": [
         {
@@ -19,7 +20,7 @@
             "MIMode": "gdb",
             "setupCommands": [
                 {
-                    "description": "Print containers and strings as what they hold",
+                    "description": "Afficher conteneurs et chaînes par ce qu'ils contiennent",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }

@@ -1,8 +1,8 @@
-# Read by cpack as it runs, which is after the build: by then this build has
-# stamped itself with the time it was made, and that stamp is what separates
-# one package of a version from the next. Setting it in CMakeLists would
-# freeze it at the moment the project was configured, which may be weeks of
-# builds ago.
+# Lu par cpack au moment où il tourne, c'est-à-dire après le build : à cette
+# heure-là le build s'est tamponné de l'instant où il a été fait, et ce
+# tampon est ce qui sépare un paquet d'une version du suivant. L'écrire dans
+# CMakeLists le figerait à l'instant où le projet a été configuré, lequel
+# peut dater de plusieurs semaines de builds.
 #
 # L'empreinte va dans la version, derrière un `~`, et non dans le champ de
 # release de Debian. Deux raisons :

@@ -1,12 +1,13 @@
 {
-    // What there is to do with this project from the editor. Each one is the
-    // same command that would be typed at a terminal, so nothing here knows
-    // anything the build does not.
+    // Ce qu'il y a à faire sur ce projet depuis l'éditeur. Chaque entrée est
+    // la commande même qu'on taperait dans un terminal : rien ici ne sait
+    // quoi que ce soit que le build ignore.
     "version": "2.0.0",
     "tasks": [
         {
-            // Writes the build files. Rarely needed by hand: a build runs it
-            // again on its own whenever CMakeLists.txt or VERSION changes.
+            // Écrit les fichiers de build. Rarement utile à la main : un
+            // build la relance de lui-même dès que CMakeLists.txt ou VERSION
+            // change.
             "label": "Configure",
             "type": "shell",
             "command": "cmake",
@@ -22,7 +23,7 @@
             "dependsOn": ["Configure"],
             "group": { "kind": "build", "isDefault": true },
             "problemMatcher": ["$gcc"],
-            "detail": "Compiles, and stamps the binary with the moment it was made"
+            "detail": "Compile, et tamponne le binaire de l'instant où il a été fait"
         },
         {
             "label": "Package (.deb)",
@@ -32,7 +33,7 @@
             "dependsOn": ["Configure"],
             "group": "build",
             "problemMatcher": ["$gcc"],
-            "detail": "Builds, then packs build/pdcartes-belote_<version>-<build>_<arch>.deb"
+            "detail": "Construit, puis empaquette build/pdcartes-belote_<version>~<empreinte>_<arch>.deb"
         }
     ]
 }
