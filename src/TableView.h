@@ -151,6 +151,7 @@ private:
     void paintFlights(QPainter *painter);
 
     int cardAt(const QPointF &where) const;
+    int seatAt(const QPointF &where) const;
     // Une carte encore en l'air n'est pas dessinée à sa place : elle y serait
     // deux fois, une fois posée et une fois en vol, et on verrait double.
     bool flying(int cardId) const;
@@ -200,6 +201,7 @@ private:
 
     int m_chosen = -1;
     int m_hovered = -1;
+    int m_hoveredSeat = -1;
 
     QString m_line;
     bool m_trouble = false;

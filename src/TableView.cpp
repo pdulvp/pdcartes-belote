@@ -1371,6 +1371,16 @@ int TableView::cardAt(const QPointF &where) const {
     return -1;
 }
 
+int TableView::seatAt(const QPointF &where) const {
+    // Cherche le siège (adversaire) qui est sous le curseur.
+    for (const Spot &spot : m_seatBoxes) {
+        if (spot.box.contains(where)) {
+            return spot.id;
+        }
+    }
+    return -1;
+}
+
 void TableView::mousePressEvent(QMouseEvent *event) {
     if (event->button() != Qt::LeftButton) {
         clearChosen();
@@ -1392,6 +1402,22 @@ void TableView::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void TableView::mouseMoveEvent(QMouseEvent *event) {
     const int card = cardAt(event->position());
+    const int seat = seatAt(event->position());
+    
+    // Si on est sur un siège, afficher le tooltip et ne pas changer le curseur
+    if (seat >= 0) {
+        if (m_hoveredSeat != seat) {
+            m_hoveredSeat = seat;
+            setToolTip(rivalsCharacteristicsTooltip());
+            update();
+        }
+    } else {
+        if (m_hoveredSeat != -1) {
+            m_hoveredSeat = -1;
+            setToolTip(QString());
+        }
+    }
+    
     if (card == m_hovered) return;
     m_hovered = card;
     setCursor(card >= 0 ? Qt::PointingHandCursor : Qt::ArrowCursor);
@@ -1413,5 +1439,7 @@ void TableView::wheelEvent(QWheelEvent *event) {
 
 void TableView::leaveEvent(QEvent *) {
     m_hovered = -1;
+    m_hoveredSeat = -1;
+    setToolTip(QString());
     update();
 }

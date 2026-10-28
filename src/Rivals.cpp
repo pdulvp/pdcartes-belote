@@ -207,3 +207,18 @@ qreal progressWithin(int xp) {
     if (top <= bottom) return 1.0;
     return qBound(0.0, qreal(qBound(bottom, xp, top) - bottom) / (top - bottom), 1.0);
 }
+
+QString rivalsCharacteristicsTooltip() {
+    // Les descriptions des trois niveaux, dans un tableau HTML sur deux colonnes.
+    // "Ce qu'il est" et "Ce qu'il a appris" pour chacun.
+    return QCoreApplication::translate(
+        "rivals",
+        "<html><body><table style='margin:0; padding:0; border-spacing:0; line-height:1.2;'>"
+        "<tr><td style='padding:0; margin:0;'><b>Débutant</b></td>"
+        "<td style='padding-left:12px; padding-right:0; margin:0;'>0-199 — compte les points de la retourne, prend sans voir la belote, joue seul</td></tr>"
+        "<tr><td style='padding:0; margin:0;'><b>Intermédiaire</b></td>"
+        "<td style='padding-left:12px; padding-right:0; margin:0;'>200-599 — pèse sa main, charge le partenaire, ne se découvre pas</td></tr>"
+        "<tr><td style='padding:0; margin:0;'><b>Expert</b></td>"
+        "<td style='padding-left:12px; padding-right:0; margin:0;'>600-1200 — compte les 32 cartes, sait ce qui reste, garde un atout pour le dix de der</td></tr>"
+        "</table></body></html>");
+}

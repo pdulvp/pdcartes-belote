@@ -101,3 +101,6 @@ qreal masteryOf(int xp);
 
 // De zéro à un à l'intérieur du niveau où il est, pour la jauge sous le nom.
 qreal progressWithin(int xp);
+
+// Renvoie le HTML pour le tooltip qui montre les caractéristiques des trois niveaux.
+QString rivalsCharacteristicsTooltip();

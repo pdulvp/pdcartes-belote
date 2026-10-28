@@ -24,6 +24,7 @@ RivalCard::RivalCard(const QString &rivalId, QWidget *parent)
     : QWidget(parent), m_rivalId(rivalId) {
     setAttribute(Qt::WA_Hover);
     setMinimumSize(286, 112);
+    setToolTip(rivalsCharacteristicsTooltip());
 }
 
 QSize RivalCard::sizeHint() const { return QSize(300, 118); }
