@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fichier généré par tools/make-icon.py. Ne pas modifier directement. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"
+     viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2d7447"/>
+      <stop offset="1" stop-color="#143620"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240"
+        rx="56" fill="url(#felt)"/>
+  <g transform="translate(12.009,8.378) scale(0.233)">
+    <path d="M 156,800 V 229.6 L 637.6,228 q 95.2,0 140.8,40 46.4,39.2 46.4,118.4 0,79.2 -52.8,116 35.2,19.2 52,51.2 16.8,31.2 16.8,80.8 0,80.8 -46.4,123.2 -45.6,41.6 -140.8,41.6 z M 622.4,330.4 H 284 v 128 h 338.4 q 72.8,0 72.8,-65.6 0,-62.4 -72.8,-62.4 z m 16,230.4 H 284 v 136 h 354.4 q 72.8,0 72.8,-68.8 0,-67.2 -72.8,-67.2 z" fill="#102b1a" fill-opacity="0.45"
+          transform="translate(6.292,12.584)"/>
+    <path d="M 156,800 V 229.6 L 637.6,228 q 95.2,0 140.8,40 46.4,39.2 46.4,118.4 0,79.2 -52.8,116 35.2,19.2 52,51.2 16.8,31.2 16.8,80.8 0,80.8 -46.4,123.2 -45.6,41.6 -140.8,41.6 z M 622.4,330.4 H 284 v 128 h 338.4 q 72.8,0 72.8,-65.6 0,-62.4 -72.8,-62.4 z m 16,230.4 H 284 v 136 h 354.4 q 72.8,0 72.8,-68.8 0,-67.2 -72.8,-67.2 z" fill="#e2bc6b"/>
+  </g>
+</svg>

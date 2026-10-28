@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=pdcartes-belote
+Name=PDCartes Belote
 GenericName=Belote
 Comment=La belote sur tapis vert, à quatre autour de la table
 Exec=pdcartes-belote
-Icon=applications-games
+Icon=pdcartes-belote
 Terminal=false
 Categories=Game;CardGame;
 Keywords=belote;cartes;jeu;atout;pli;contrat;tapis;

@@ -206,11 +206,69 @@ qt_add_resources(pdcartes-belote "icones"
         assets/icons/weather-clear-night-symbolic.svg
         assets/icons/weather-clear-symbolic.svg)
 
+# Icône de l'application, également incluse dans le binaire.
+#
+# Les sept tailles sont fournies plutôt que la seule plus grande : `QIcon`
+# retient alors la taille adéquate au lieu de redimensionner, et une lettre
+# rendue directement à seize pixels reste plus nette qu'une réduction du
+# rendu à 256 pixels.
+#
+# Les images sont des PNG et non le SVG d'origine : la lecture d'un SVG
+# requiert un greffon qui n'est ici qu'un paquet recommandé, alors que Qt lit
+# toujours les PNG. Une icône absente faute de greffon reproduirait le défaut
+# que l'on corrige.
+#
+# Le dessin, les PNG et le fichier ICO sont produits par `tools/make-icon.py`
+# et versionnés : la compilation ne requiert pas Inkscape.
+qt_add_resources(pdcartes-belote "icone-du-jeu"
+    PREFIX "/app"
+    BASE assets/icon
+    FILES
+        assets/icon/pdcartes-belote-16.png
+        assets/icon/pdcartes-belote-24.png
+        assets/icon/pdcartes-belote-32.png
+        assets/icon/pdcartes-belote-48.png
+        assets/icon/pdcartes-belote-64.png
+        assets/icon/pdcartes-belote-128.png
+        assets/icon/pdcartes-belote-256.png)
+
 target_link_libraries(pdcartes-belote PRIVATE cartotheque Qt6::Widgets)
 
 # Sur Windows, un programme à fenêtres et non un programme de console : sans
 # cela une console noire s'ouvre derrière le tapis et reste là.
 set_target_properties(pdcartes-belote PROPERTIES WIN32_EXECUTABLE ON)
+
+# Métadonnées lues par Windows sans exécuter le programme : l'icône affichée
+# par l'explorateur, ainsi que le nom, la version et la description présentés
+# dans la feuille de propriétés. `setWindowIcon` ne s'applique qu'aux fenêtres
+# d'un programme en cours d'exécution et ne les remplace donc pas. Ce fichier
+# est l'équivalent, pour Windows, du fichier `.desktop` destiné à Linux ; tous
+# deux résident dans `data/`.
+#
+# Ces métadonnées sont fournies par un script de ressources compilé par
+# windres, que le fichier de chaîne de compilation croisée désigne déjà
+# (`CMAKE_RC_COMPILER`). Le script est généré dans l'arbre de compilation afin
+# d'y inscrire le chemin absolu du fichier ICO et les numéros de version.
+#
+# La génération a lieu lors de la configuration et non de la compilation :
+# `FILEVERSION` n'acceptant que des entiers, la version du projet suffit, et
+# toute modification du fichier `VERSION` déclenche déjà une reconfiguration
+# (`CMAKE_CONFIGURE_DEPENDS`, en tête de ce fichier). L'horodatage de
+# compilation reste accessible par l'option `--version`.
+if(WIN32)
+    enable_language(RC)
+    file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets/icon/pdcartes-belote.ico"
+         PDCARTES_BELOTE_ICO)
+    configure_file(data/pdcartes-belote.rc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/pdcartes-belote.rc @ONLY)
+    target_sources(pdcartes-belote PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pdcartes-belote.rc)
+
+    # Le script est encodé en UTF-8, la description étant en français et
+    # comportant des caractères accentués. Sans indication contraire, windres
+    # suppose l'encodage CP1252, ce qui altérerait les chaînes affichées par
+    # Windows.
+    string(APPEND CMAKE_RC_FLAGS " -c 65001")
+endif()
 
 # Là-bas l'exe est à la racine du dossier, avec ses DLL autour -- c'est ce
 # qu'attend quelqu'un qui décompresse un jeu ; ici, dans bin.
@@ -257,6 +315,25 @@ endforeach()
 if(UNIX AND NOT APPLE)
     install(FILES data/pdcartes-belote.desktop
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+
+    # Installation de l'icône dans le thème `hicolor`, thème de recours que
+    # tout environnement de bureau consulte en dernier et dans lequel une
+    # application dépose la sienne. Le nom des fichiers doit correspondre à la
+    # valeur `Icon=` du fichier `.desktop` et à celle demandée à
+    # `QIcon::fromTheme`, soit `pdcartes-belote` dans les trois cas.
+    #
+    # Chaque taille est installée séparément, et le dessin vectoriel est
+    # ajouté sous `scalable` : un environnement à haute densité d'affichage
+    # réclamant par exemple 96 pixels le rend à partir du SVG plutôt que
+    # d'agrandir le PNG de 64.
+    foreach(_size 16 24 32 48 64 128 256)
+        install(FILES assets/icon/pdcartes-belote-${_size}.png
+                DESTINATION
+                    ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${_size}x${_size}/apps
+                RENAME pdcartes-belote.png)
+    endforeach()
+    install(FILES assets/icon/pdcartes-belote.svg
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
 endif()
 
 # ---------------------------------------------------------------------------
