@@ -21,10 +21,11 @@ namespace {
 
 // Les points du tapis.
 //
-// A weave is made of threads lying across one another, and the way to say
-// that in two colours is one family of lines a shade lighter than the cloth
-// and one a shade darker, half a pitch apart. Eight pixels square, so that
-// the pattern tiles without a seam and the lines land on whole pixels.
+// Une trame est formée de fils se croisant. Elle est rendue au moyen de deux
+// familles de lignes, l'une légèrement plus claire que le tissu et l'autre
+// légèrement plus sombre, décalées d'un demi-pas. La tuile mesure huit pixels
+// de côté, de sorte que le motif se répète sans raccord visible et que les
+// lignes tombent sur des pixels entiers.
 struct Weave {
     QPixmap tile;
     int hue = -1;
@@ -33,10 +34,11 @@ struct Weave {
 };
 
 // Handed out by a function rather than kept as a variable at file scope: a
-// QPixmap wants a QGuiApplication to exist before it is made, and a variable
-// at file scope is made before main() has got as far as making one. A static
-// inside a function is made the first time the function is called, which is
-// long afterwards.
+// La tuile est fournie par une fonction plutôt que conservée dans une
+// variable de portée fichier : la construction d'un `QPixmap` suppose qu'une
+// `QGuiApplication` existe déjà, alors qu'une variable de portée fichier est
+// construite avant que `main()` n'en ait créé une. Une variable statique
+// locale à une fonction est construite au premier appel, bien plus tard.
 Weave &weave() {
     static Weave kept;
     return kept;
@@ -104,8 +106,8 @@ const QPixmap &drawnBack(const QSizeF &wanted, const Palette &scheme, bool lit) 
     painter.setPen(Qt::NoPen);
     painter.fillPath(shape, back);
 
-    // Le dos: a white margin and a lattice inside it, which is what the back
-    // of a card has looked like since there were backs on cards.
+    // Le dos : une marge claire et un treillis à l'intérieur, disposition
+    // qu'ont les dos de cartes depuis qu'il y a des dos de cartes.
     const QRectF panel = box.adjusted(box.width() * 0.085, box.width() * 0.085,
                                       -box.width() * 0.085, -box.width() * 0.085);
     painter.setPen(QPen(blendColours(back, QColor(Qt::white), 0.45), 1.0));
@@ -186,9 +188,9 @@ const QPixmap &weaveTile(const Palette &scheme) {
     QColor thread = scheme.feltWeave;
     thread.setAlpha(58);
     painter.setPen(QPen(thread, 1.0));
-    // One family of threads across, one down, half a pitch apart: that is
-    // what a cloth looks like close up, and from a yard away it is a texture
-    // rather than a grid.
+    // Une famille de fils horizontaux et une famille de fils verticaux,
+    // décalées d'un demi-pas : c'est l'aspect d'un tissu vu de près, qui à
+    // distance normale se lit comme une texture et non comme une grille.
     painter.drawLine(0, 0, kPitch, 0);
     painter.drawLine(0, 4, 0, kPitch);
     QColor shadow = scheme.feltEdge;
@@ -228,9 +230,9 @@ void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme, bool 
     painter->save();
     painter->setPen(Qt::NoPen);
 
-    // La lumière au-dessus de la table: brighter where the lamp is, which is
-    // over the middle. It is the one thing that makes a flat fill of green
-    // look like cloth with a room around it.
+    // Éclairage de la table : plus clair à l'aplomb de la source lumineuse,
+    // située au-dessus du centre. C'est ce dégradé qui distingue un aplat
+    // vert uniforme d'un tissu éclairé dans une pièce.
     QRadialGradient light(box.center() - QPointF(0, box.height() * 0.10),
                           std::max(box.width(), box.height()) * 0.78);
     light.setColorAt(0.0, scheme.felt);
@@ -247,8 +249,9 @@ void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme, bool 
         return;
     }
 
-    // La bordure: a braid a little in from the edge, and a darker line
-    // outside it, so the cloth reads as cloth stretched over a rail.
+    // Bordure : un galon légèrement en retrait du bord, doublé d'une ligne
+    // plus sombre à l'extérieur, afin que le tissu se lise comme tendu sur un
+    // cadre.
     const qreal inset = std::max(5.0, std::min(box.width(), box.height()) * 0.012);
     QRectF trimBox = box.adjusted(inset, inset, -inset, -inset);
     painter->setBrush(Qt::NoBrush);
@@ -439,9 +442,9 @@ void drawRivalEmblem(QPainter *painter, const QRectF &box, int emblem, const QSt
     painter->setBrush(Qt::NoBrush);
     painter->drawEllipse(disc.adjusted(span * 0.045, span * 0.045, -span * 0.045, -span * 0.045));
 
-    // L'initiale au milieu, et la marque en haut: a ring of six is told apart
-    // by colour at a glance, by its mark at a look and by its letter for
-    // certain.
+    // L'initiale au milieu, et la marque en haut : parmi six médaillons, la
+    // couleur permet une identification immédiate, le symbole une
+    // identification rapide, et la lettre une identification certaine.
     QFont letter = plainFont(painter);
     letter.setBold(true);
     letter.setPixelSize(std::max(8, int(span * 0.44)));
@@ -539,8 +542,9 @@ void drawGauge(QPainter *painter, const QRectF &box, qreal filled, const QColor 
 void drawHandPile(QPainter *painter, const QRectF &box, int cards, const Palette &scheme,
                   const QColor &tint) {
     if (cards <= 0) return;
-    // Not one back per card -- fifteen of them in eighty pixels is a smear --
-    // but enough of them that a thick hand looks thick.
+    // Le tas ne comporte pas un dos par carte -- huit dos sur quatre-vingts
+    // pixels seraient indistincts -- mais un nombre suffisant pour qu'une
+    // main nombreuse paraisse telle.
     const int shown = std::min(cards, 7);
     const qreal height = box.height();
     const QSizeF card = cardSizeForHeight(height);

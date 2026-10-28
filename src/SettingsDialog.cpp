@@ -58,9 +58,9 @@ constexpr int kStripPad = 9;
 QCheckBox *switchRow(QWidget *parent, const QString &text, bool on) {
     auto *box = new QCheckBox(text, parent);
     box->setChecked(on);
-    // Told the table's ink rather than left to inherit it: a platform style
-    // hands a checkbox a palette of its own, which outranks the one the
-    // dialog's body is wearing.
+    // L'encre de la table lui est donnée plutôt que laissée à l'héritage :
+    // le style de la plateforme remet à une case à cocher une palette à elle,
+    // qui passe devant celle que porte le corps de la boîte.
     QPalette ink = box->palette();
     ink.setColor(QPalette::WindowText, currentPalette().surfaceText);
     ink.setColor(QPalette::Text, currentPalette().surfaceText);
