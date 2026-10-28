@@ -1,6 +1,8 @@
 #pragma once
 
+#include <QPixmap>
 #include <QPoint>
+#include <QRectF>
 #include <QString>
 #include <QVector>
 #include <QWidget>
@@ -21,6 +23,11 @@ class TileButton;
 // Le profil n'est plus ici : il se tient dans la bande du haut, où il reste
 // visible pendant la partie. Et ce qui se fait d'un joueur se fait sur lui,
 // d'un clic droit, plutôt que dans les réglages.
+//
+// Sur le tapis, et non sur une page à part : c'est le même drap que l'écran
+// titre et que la partie, et le logo descend de l'un pour se poser en tête de
+// celui-ci. Ce qui est posé dessus est donc sombre et bordé d'or -- ce qui se
+// lit sur un drap vert sombre est clair, pas pâle.
 class TablePicker : public QWidget {
     Q_OBJECT
 
@@ -35,21 +42,44 @@ public:
     void reread();
     void refresh();
 
+    // Où le logo se pose, dans les coordonnées de la page : c'est là que le
+    // vol depuis l'écran titre se termine.
+    QRectF markRect() const;
+    // Le temps du vol, c'est le calque qui porte le logo.
+    void setMarkHidden(bool hidden);
+    // La page paraît : ce qui est posé sur le drap monte de rien à tout
+    // pendant que le logo descend. Sans cela le logo volerait au-dessus d'un
+    // menu déjà entièrement là, et le vol n'aurait l'air de rien.
+    void beginEntrance();
+
 Q_SIGNALS:
     void tableChosen(const QString &id);
 
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+
 private:
+    void rebuildFelt();
+
     void showRivalMenu(RivalCard *card, const QPoint &where);
     void renameRival(const QString &rivalId);
     void askResetRival(const QString &rivalId);
 
-    QLabel *m_title = nullptr;
-    QLabel *m_subtitle = nullptr;
+    // Le tapis, peint une fois : la page défile, et refaire le tissage à
+    // chaque cran de molette serait du travail jeté.
+    QPixmap m_felt;
+    // La bande du haut, qui ne défile pas : le logo s'y tient.
+    QWidget *m_header = nullptr;
+    // Tout ce qui n'est pas la bande du logo : c'est lui qui paraît.
+    QWidget *m_content = nullptr;
     QLabel *m_rivalNote = nullptr;
     QLabel *m_footer = nullptr;
+    QVector<QWidget *> m_headings;
     QVector<TileButton *> m_tiles;
     QVector<RivalCard *> m_cards;
     // L'ordre dans lequel on les a invités, parce que le premier ne s'assoit
     // pas à la même place que le deuxième.
     QVector<QString> m_order;
+    bool m_markHidden = false;
 };
