@@ -12,13 +12,15 @@ class QPushButton;
 class RivalCard;
 class TileButton;
 
-// Le menu d'ouverture : les cinq tables, et les six joueurs.
+// Le menu d'ouverture : les six joueurs, et les cinq tables.
 //
 // Il n'y a ni bouton « nouvelle partie » ni boîte de dialogue à traverser :
 // presser une table est ce qui lance la partie, parce que choisir jusqu'où
-// elle va est le seul choix qu'une nouvelle partie demande. Tout le reste de
-// la page répond à la question d'avant, qui à la belote n'est pas « contre
-// qui » mais « avec qui » : le premier invité s'assoit en face de vous.
+// elle va est le seul choix qu'une nouvelle partie demande. Tout ce qui se
+// choisit est donc au-dessus d'elles -- la question d'avant, qui à la belote
+// n'est pas « contre qui » mais « avec qui » : le premier invité s'assoit en
+// face de vous -- et les tables ferment la page, parce qu'une fois pressées
+// il n'y a plus de page.
 //
 // Le profil n'est plus ici : il se tient dans la bande du haut, où il reste
 // visible pendant la partie. Et ce qui se fait d'un joueur se fait sur lui,
