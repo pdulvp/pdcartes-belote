@@ -1,7 +1,7 @@
 #include "TablePicker.h"
 
 #include "Cards.h"
-#include "DialogChrome.h"
+#include "FeltArt.h"
 #include "MenuStyle.h"
 #include "NameDialog.h"
 #include "Palette.h"
@@ -10,61 +10,142 @@
 #include "Rivals.h"
 #include "Tables.h"
 #include "TileButton.h"
+#include "TitleMark.h"
 
 #include <QAction>
+#include <QEasingCurve>
+#include <QFrame>
+#include <QGraphicsOpacityEffect>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPropertyAnimation>
 #include <QScrollArea>
 #include <QVBoxLayout>
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 
-const QSize kTableTile(200, 182);
+const QSize kTableTile(188, 170);
 
-QLabel *heading(QWidget *parent, const QString &text, qreal scale, bool bold) {
-    auto *label = new QLabel(text, parent);
-    QFont font = label->font();
-    font.setBold(bold);
-    if (font.pointSizeF() > 0) font.setPointSizeF(font.pointSizeF() * scale);
-    label->setFont(font);
-    return label;
+// La marge de la page, la bande du logo, et la hauteur du logo dedans.
+constexpr int kMargin = 34;
+constexpr int kHeaderHeight = 114;
+// La ligne du dessus ne fait que le cinquième de la grande : le logo en tête
+// de page est d'autant plus haut, sans quoi `PDCartes` y tomberait sous la
+// taille où ce trait de fonte se tient encore.
+constexpr int kMarkHeight = 82;
+
+// Ce qui sépare une section de la suivante, et ce qui sépare un titre de
+// section de ce qu'il annonce. Le premier est large et le second serré :
+// c'est l'écart qui dit à quoi un titre appartient, et deux sections
+// également espacées de leur titre et l'une de l'autre n'en font qu'une
+// longue.
+constexpr int kSectionGap = 44;
+constexpr int kHeadingGap = 10;
+// Le temps que la page met à paraître derrière le logo qui se pose. Un peu
+// plus court que le vol : le menu est là quand le logo arrive, et non après.
+constexpr int kEntranceMs = 430;
+
+QColor goldLine(const Palette &scheme, qreal strength) {
+    QColor line = scheme.gold;
+    line.setAlphaF(strength);
+    return line;
+}
+
+// Le titre d'une section : deux mots en capitales d'or, et un filet qui court
+// jusqu'au bout de la page. Une étiquette et une règle plutôt que la chrome
+// des dialogues, qui est faite pour un fond pâle.
+QWidget *feltSection(QWidget *parent, const QString &text) {
+    auto *heading = new QWidget(parent);
+    heading->setObjectName(QStringLiteral("feltSection"));
+    auto *across = new QHBoxLayout(heading);
+    across->setContentsMargins(0, 0, 0, 0);
+    across->setSpacing(12);
+
+    auto *label = new QLabel(text, heading);
+    label->setObjectName(QStringLiteral("feltSectionLabel"));
+    QFont caps = label->font();
+    caps.setBold(true);
+    caps.setCapitalization(QFont::AllUppercase);
+    caps.setLetterSpacing(QFont::PercentageSpacing, 150);
+    if (caps.pointSizeF() > 0) caps.setPointSizeF(caps.pointSizeF() * 0.92);
+    label->setFont(caps);
+
+    auto *rule = new QFrame(heading);
+    rule->setObjectName(QStringLiteral("feltSectionRule"));
+    rule->setFrameShape(QFrame::HLine);
+    rule->setFixedHeight(1);
+
+    across->addWidget(label);
+    across->addWidget(rule, 1);
+    return heading;
 }
 
 } // namespace
 
 TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
+    // Le tapis couvre tout, et c'est nous qui le peignons.
+    setAttribute(Qt::WA_OpaquePaintEvent);
+
     auto *outer = new QVBoxLayout(this);
     outer->setContentsMargins(0, 0, 0, 0);
     outer->setSpacing(0);
 
-    auto *scroller = new QScrollArea(this);
+    // La bande du logo ne défile pas : le logo est l'enseigne de la page, et
+    // une enseigne qui s'en va au premier cran de molette n'en est pas une.
+    // Elle ne peint rien elle-même -- c'est la page qui dessine le logo
+    // dedans, pour que le vol depuis l'écran titre arrive sur le tapis et non
+    // sur un widget.
+    m_header = new QWidget(this);
+    m_header->setFixedHeight(kHeaderHeight);
+    m_header->setAttribute(Qt::WA_TransparentForMouseEvents);
+    outer->addWidget(m_header);
+
+    m_content = new QWidget(this);
+    auto *down = new QVBoxLayout(m_content);
+    down->setContentsMargins(0, 0, 0, 0);
+    down->setSpacing(0);
+    outer->addWidget(m_content, 1);
+
+    auto *scroller = new QScrollArea(m_content);
     scroller->setWidgetResizable(true);
     scroller->setFrameShape(QFrame::NoFrame);
-    scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    outer->addWidget(scroller);
+    // Une barre horizontale quand la fenêtre est trop étroite pour les cinq
+    // tables : sans elle, la dernière est coupée et hors d'atteinte. Elle ne
+    // paraît que là.
+    scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    // Le drap se voit à travers : ni la zone, ni sa vitre, ni la page dedans
+    // ne peignent de fond.
+    scroller->setStyleSheet(QStringLiteral("QScrollArea { background: transparent; border: 0; }"));
+    scroller->viewport()->setAutoFillBackground(false);
+    scroller->viewport()->setStyleSheet(QStringLiteral("background: transparent;"));
+    down->addWidget(scroller, 1);
 
     auto *page = new QWidget(scroller);
+    page->setAutoFillBackground(false);
+    page->setStyleSheet(QStringLiteral("background: transparent;"));
     scroller->setWidget(page);
 
     auto *rows = new QVBoxLayout(page);
-    rows->setContentsMargins(30, 24, 30, 26);
+    rows->setContentsMargins(kMargin, 0, kMargin, 22);
     rows->setSpacing(0);
-
-    m_title = heading(page, tr("pdcartes-belote"), 2.1, true);
-    m_subtitle = heading(page, tr("La belote, à quatre et sur tapis vert, avec un partenaire "
-                                  "qui apprend d'une partie à l'autre."),
-                         1.0, false);
-    rows->addWidget(m_title);
-    rows->addSpacing(2);
-    rows->addWidget(m_subtitle);
-    rows->addSpacing(22);
+    // Un ressort en tête : la page se tient au milieu de la place qu'elle a,
+    // et se range en haut dès qu'elle n'en a plus -- un ressort rendu à zéro
+    // est un ressort qui ne fait rien, et c'est alors la barre de défilement
+    // qui prend la suite.
+    rows->addStretch(1);
 
     // Les tables.
-    rows->addWidget(dialogSectionHeading(page, tr("La table")));
-    rows->addSpacing(8);
+    QWidget *tableHeading = feltSection(page, tr("La table"));
+    m_headings.append(tableHeading);
+    rows->addWidget(tableHeading);
+    rows->addSpacing(kHeadingGap);
     auto *tiles = new QHBoxLayout;
     tiles->setSpacing(10);
     for (const TableKind &kind : tableKinds()) {
@@ -72,6 +153,7 @@ TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
         tile->setText(kind.name);
         tile->setBlurb(kind.blurb);
         tile->setTileSize(kTableTile);
+        tile->setOnFelt(true);
         tile->setCorner(kind.points > 0 ? tr("%1 pts").arg(kind.points) : tr("1 donne"));
         const QString id = kind.id;
         connect(tile, &TileButton::clicked, this, [this, id] { Q_EMIT tableChosen(id); });
@@ -80,16 +162,13 @@ TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
     }
     tiles->addStretch();
     rows->addLayout(tiles);
-    rows->addSpacing(6);
-    m_footer = new QLabel(page);
-    m_footer->setWordWrap(true);
-    markHintLabel(m_footer);
-    rows->addWidget(m_footer);
-    rows->addSpacing(24);
+    rows->addSpacing(kSectionGap);
 
     // Les six.
-    rows->addWidget(dialogSectionHeading(page, tr("Les joueurs")));
-    rows->addSpacing(8);
+    QWidget *rivalHeading = feltSection(page, tr("Les joueurs"));
+    m_headings.append(rivalHeading);
+    rows->addWidget(rivalHeading);
+    rows->addSpacing(kHeadingGap);
     auto *grid = new QGridLayout;
     grid->setHorizontalSpacing(10);
     grid->setVerticalSpacing(10);
@@ -97,6 +176,7 @@ TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
     for (const Rival &rival : rivals()) {
         auto *card = new RivalCard(rival.id, page);
         card->setPickable(true);
+        card->setOnFelt(true);
         card->setToolTip(tr("Cliquer pour inviter %1 à la table ; clic droit pour le "
                             "renommer ou le remettre à son niveau de départ.")
                              .arg(rivalName(rival.id)));
@@ -115,14 +195,85 @@ TablePicker::TablePicker(QWidget *parent) : QWidget(parent) {
         ++at;
     }
     rows->addLayout(grid);
-    rows->addSpacing(6);
+    rows->addSpacing(12);
+
+    // Ce que les invitations ont fait de la table : qui est en face, qui est
+    // contre vous. Une ligne, sous la grille à laquelle elle répond.
     m_rivalNote = new QLabel(page);
     m_rivalNote->setWordWrap(true);
-    markHintLabel(m_rivalNote);
     rows->addWidget(m_rivalNote);
+    rows->addSpacing(8);
+
+    // Les gestes qu'on ne devine pas, et rien d'autre : tout le reste est
+    // écrit sur la chose elle-même.
+    m_footer = new QLabel(page);
+    m_footer->setWordWrap(true);
+    m_footer->setText(tr("Une table lance la partie  ·  un clic invite  ·  "
+                         "un clic droit renomme"));
+    rows->addWidget(m_footer);
     rows->addStretch(1);
 
     reread();
+}
+
+QRectF TablePicker::markRect() const {
+    const qreal height = kMarkHeight;
+    const qreal width = height * titleMarkAspect(font());
+    const qreal top = m_header ? m_header->y() : 0.0;
+    return QRectF(kMargin, top + (kHeaderHeight - height) / 2.0 + 4.0, width, height);
+}
+
+void TablePicker::setMarkHidden(bool hidden) {
+    if (m_markHidden == hidden) return;
+    m_markHidden = hidden;
+    update();
+}
+
+void TablePicker::beginEntrance() {
+    if (!m_content) return;
+    // L'effet n'est posé que le temps de la montée : il fait passer toute la
+    // page par un pixmap, ce qui n'a pas à durer au-delà.
+    auto *fade = new QGraphicsOpacityEffect(m_content);
+    fade->setOpacity(0.0);
+    m_content->setGraphicsEffect(fade);
+
+    auto *rise = new QPropertyAnimation(fade, "opacity", this);
+    rise->setDuration(kEntranceMs);
+    rise->setStartValue(0.0);
+    rise->setEndValue(1.0);
+    rise->setEasingCurve(QEasingCurve::OutCubic);
+    connect(rise, &QPropertyAnimation::finished, m_content,
+            [content = m_content] { content->setGraphicsEffect(nullptr); });
+    rise->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void TablePicker::rebuildFelt() {
+    if (width() <= 0 || height() <= 0) {
+        m_felt = QPixmap();
+        return;
+    }
+    const qreal ratio = devicePixelRatioF();
+    m_felt = QPixmap(QSize(int(std::ceil(width() * ratio)), int(std::ceil(height() * ratio))));
+    m_felt.setDevicePixelRatio(ratio);
+
+    QPainter painter(&m_felt);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    drawFelt(&painter, QRectF(0, 0, width(), height()), currentPalette(), false);
+}
+
+void TablePicker::paintEvent(QPaintEvent *event) {
+    Q_UNUSED(event);
+    if (m_felt.isNull()) rebuildFelt();
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.drawPixmap(0, 0, m_felt);
+    if (!m_markHidden) drawTitleMark(&painter, markRect(), font(), currentPalette());
+}
+
+void TablePicker::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+    rebuildFelt();
 }
 
 QVector<QString> TablePicker::invited() const { return m_order; }
@@ -185,11 +336,6 @@ void TablePicker::askResetRival(const QString &rivalId) {
 }
 
 void TablePicker::reread() {
-    m_footer->setText(tr("Presser une table lance la partie. Chacun reçoit cinq cartes, une "
-                         "est retournée, et celui qui la prend ramasse huit cartes et un "
-                         "contrat : quatre-vingt-deux des cent soixante-deux points de la "
-                         "donne."));
-
     // Les cartes disent où chacun s'assoira, pour que le partenaire ne soit
     // pas une surprise de la première donne.
     QStringList names;
@@ -228,18 +374,27 @@ void TablePicker::reread() {
 
 void TablePicker::refresh() {
     const Palette &scheme = currentPalette();
-    QPalette page = palette();
-    page.setColor(QPalette::Window, scheme.desk);
-    page.setColor(QPalette::WindowText, scheme.surfaceText);
-    setPalette(page);
-    setAutoFillBackground(true);
+    rebuildFelt();
 
-    m_title->setStyleSheet(QStringLiteral("color: %1;").arg(scheme.accent.name()));
-    m_subtitle->setStyleSheet(QStringLiteral("color: %1;").arg(scheme.hint.name()));
-    for (QLabel *note : {m_rivalNote, m_footer}) {
-        note->setStyleSheet(QStringLiteral("color: %1;").arg(scheme.hint.name()));
+    for (QWidget *heading : m_headings) {
+        if (auto *label = heading->findChild<QLabel *>(QStringLiteral("feltSectionLabel"))) {
+            label->setStyleSheet(
+                QStringLiteral("color: %1; background: transparent;").arg(scheme.gold.name()));
+        }
+        if (auto *rule = heading->findChild<QFrame *>(QStringLiteral("feltSectionRule"))) {
+            rule->setStyleSheet(QStringLiteral("background: %1; border: 0;")
+                                    .arg(goldLine(scheme, 0.28).name(QColor::HexArgb)));
+        }
     }
-    recolourSectionHeadings(this);
+
+    QColor aside = scheme.feltText;
+    aside.setAlphaF(0.72);
+    m_rivalNote->setStyleSheet(QStringLiteral("color: %1; background: transparent;")
+                                   .arg(aside.name(QColor::HexArgb)));
+    aside.setAlphaF(0.58);
+    m_footer->setStyleSheet(QStringLiteral("color: %1; background: transparent;")
+                                .arg(aside.name(QColor::HexArgb)));
+
     reread();
     update();
 }

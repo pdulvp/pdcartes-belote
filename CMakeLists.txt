@@ -108,6 +108,16 @@ add_executable(pdcartes-belote
     src/Profiles.h
     src/Brain.cpp
     src/Brain.h
+    # L'écran titre, qui est le seuil de la séance, et le logo qu'il partage
+    # avec le menu.
+    src/Fonts.cpp
+    src/Fonts.h
+    src/TitleMark.cpp
+    src/TitleMark.h
+    src/TitleFlight.cpp
+    src/TitleFlight.h
+    src/TitlePage.cpp
+    src/TitlePage.h
     # La table à l'écran, et la page qui y fait tourner une partie.
     src/TableView.cpp
     src/TableView.h
@@ -134,6 +144,31 @@ add_executable(pdcartes-belote
 # compilées.
 add_dependencies(pdcartes-belote build-version)
 
+# Les fontes d'affichage du logo, dans le binaire.
+#
+# Dedans et non à côté : le jeu est un fichier, le zip de Windows n'a rien de
+# plus à emporter, et une fonte qu'on ne trouve pas au démarrage ne laisse pas
+# le logo en Sans.
+#
+# Un seul appel pour les trois, et non un chacune : le deuxième argument est
+# le nom de la ressource, dont est tiré celui du fichier que rcc écrit. Deux
+# appels du même nom sur la même cible se disputent le même fichier.
+#
+# `BASE assets` est ce qui fait que le chemin de la ressource est
+# `:/fonts/ZenDots/ZenDots-Regular.ttf` et non `:/fonts/assets/ZenDots/...` :
+# le dossier de chaque fonte est gardé, sa licence vivant à côté d'elle.
+qt_add_resources(pdcartes-belote "titre"
+    PREFIX "/fonts"
+    BASE assets
+    FILES
+        assets/ZenDots/ZenDots-Regular.ttf
+        assets/ZenTokyoZoo/ZenTokyoZoo-Regular.ttf
+        # Le gras seul des cinq graisses livrées : c'est la seule dont le jeu
+        # se sert, et chacune pèse deux mégaoctets -- une fonte japonaise
+        # porte ses milliers d'idéogrammes, qu'on les écrive ou non. Les cinq
+        # doubleraient le binaire pour une ligne de trois mots.
+        assets/Zen_Kaku_Gothic_New/ZenKakuGothicNew-Bold.ttf)
+
 target_link_libraries(pdcartes-belote PRIVATE cartotheque Qt6::Widgets)
 
 # Sur Windows, un programme à fenêtres et non un programme de console : sans
@@ -147,6 +182,24 @@ if(WIN32)
 else()
     install(TARGETS pdcartes-belote RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
+
+# La licence de chaque fonte voyage avec elle : les trois sont compilées dans
+# le binaire, et l'OFL demande que sa licence accompagne ce qui l'emporte. Une
+# par fonte, et nommée d'après elle : deux fichiers « OFL.txt » dans le même
+# dossier n'en feraient qu'un.
+foreach(_font ZenDots ZenTokyoZoo Zen_Kaku_Gothic_New)
+    # Le dossier porte les tirets bas de chez Google Fonts ; le fichier
+    # installé porte le nom de la fonte.
+    string(REPLACE "_" "" _named "${_font}")
+    if(WIN32)
+        install(FILES assets/${_font}/OFL.txt DESTINATION .
+                RENAME OFL-${_named}.txt)
+    else()
+        install(FILES assets/${_font}/OFL.txt
+                DESTINATION ${CMAKE_INSTALL_DOCDIR}
+                RENAME OFL-${_named}.txt)
+    endif()
+endforeach()
 
 # Pour qu'un shell de bureau puisse dire à quelle application une fenêtre
 # appartient. Le nom du fichier doit être celui de l'app_id que l'application

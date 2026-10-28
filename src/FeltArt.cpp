@@ -205,7 +205,7 @@ const QPixmap &weaveTile(const Palette &scheme) {
 
 } // namespace
 
-void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme) {
+void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme, bool braid) {
     painter->save();
     painter->setPen(Qt::NoPen);
 
@@ -223,18 +223,23 @@ void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme) {
     painter->setBrush(QBrush(weaveTile(scheme)));
     painter->drawRect(box);
 
+    if (!braid) {
+        painter->restore();
+        return;
+    }
+
     // La bordure: a braid a little in from the edge, and a darker line
     // outside it, so the cloth reads as cloth stretched over a rail.
     const qreal inset = std::max(5.0, std::min(box.width(), box.height()) * 0.012);
-    QRectF braid = box.adjusted(inset, inset, -inset, -inset);
+    QRectF trimBox = box.adjusted(inset, inset, -inset, -inset);
     painter->setBrush(Qt::NoBrush);
     QColor trim = scheme.trim;
     trim.setAlpha(150);
     painter->setPen(QPen(trim, 2.0));
-    painter->drawRoundedRect(braid, 10, 10);
+    painter->drawRoundedRect(trimBox, 10, 10);
     trim.setAlpha(60);
     painter->setPen(QPen(trim, 1.0));
-    painter->drawRoundedRect(braid.adjusted(-3, -3, 3, 3), 12, 12);
+    painter->drawRoundedRect(trimBox.adjusted(-3, -3, 3, 3), 12, 12);
     painter->restore();
 }
 

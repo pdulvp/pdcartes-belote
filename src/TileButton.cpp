@@ -101,6 +101,11 @@ void TileButton::setCorner(const QString &corner) {
     update();
 }
 
+void TileButton::setOnFelt(bool onFelt) {
+    m_onFelt = onFelt;
+    update();
+}
+
 void TileButton::setTileSize(const QSize &size) {
     m_tileSize = size;
     setMinimumSize(size);
@@ -134,22 +139,37 @@ void TileButton::paintEvent(QPaintEvent *) {
     QRectF box = QRectF(rect()).adjusted(1.5, 1.5, -1.5, -1.5);
     if (isDown()) box.translate(0, 1);
 
-    const QColor fill = isChecked() ? blendColours(scheme.surface, scheme.accent, 0.20)
-                                    : (lit ? blendColours(scheme.surface, scheme.accent, 0.10)
-                                           : scheme.surface);
+    QColor fill;
+    QColor edge;
+    qreal line = 1.2;
+    if (m_onFelt) {
+        // Sur le drap : presque noir et translucide, bordé d'un filet d'or
+        // qui s'allume au survol. Pas d'ombre portée -- une plaque sombre sur
+        // un drap sombre n'en a pas besoin, et l'ombre ne ferait qu'un halo.
+        fill = blendColours(scheme.feltEdge, QColor(0, 0, 0), lit ? 0.42 : 0.52);
+        fill.setAlpha(lit ? 215 : 205);
+        edge = scheme.gold;
+        edge.setAlphaF(isChecked() ? 0.95 : (lit ? 0.80 : 0.26));
+        line = isChecked() ? 2.2 : (lit ? 2.0 : 1.2);
+    } else {
+        fill = isChecked() ? blendColours(scheme.surface, scheme.accent, 0.20)
+                           : (lit ? blendColours(scheme.surface, scheme.accent, 0.10)
+                                  : scheme.surface);
+        edge = isChecked() || lit ? scheme.accent : scheme.edge;
+        line = isChecked() ? 2.2 : (lit ? 2.0 : 1.2);
+    }
 
     QPainterPath shape;
     shape.addRoundedRect(box, kCorner, kCorner);
 
-    if (lit || isChecked()) {
+    if (!m_onFelt && (lit || isChecked())) {
         QPainterPath lift;
         lift.addRoundedRect(box.translated(0, 2.5), kCorner, kCorner);
         painter.fillPath(lift, blendColours(scheme.desk, scheme.accent, 0.28));
     }
 
     painter.fillPath(shape, fill);
-    painter.setPen(QPen(isChecked() || lit ? scheme.accent : scheme.edge,
-                        isChecked() ? 2.2 : (lit ? 2.0 : 1.2)));
+    painter.setPen(QPen(edge, line));
     painter.drawPath(shape);
 
     const QRectF inner = box.adjusted(kPadding, kPadding, -kPadding, -kPadding);
@@ -161,7 +181,7 @@ void TileButton::paintEvent(QPaintEvent *) {
     name.setBold(true);
     if (name.pointSizeF() > 0) name.setPointSizeF(name.pointSizeF() * 1.08);
     painter.setFont(name);
-    painter.setPen(scheme.surfaceText);
+    painter.setPen(m_onFelt ? (lit ? scheme.gold : scheme.feltText) : scheme.surfaceText);
     const QFontMetricsF nameMetrics(name);
     const QRectF nameBox(inner.left(), art.bottom() + 6, inner.width(), nameMetrics.height());
     painter.drawText(nameBox, Qt::AlignHCenter | Qt::AlignVCenter, text());
@@ -170,7 +190,9 @@ void TileButton::paintEvent(QPaintEvent *) {
         QFont aside = font();
         if (aside.pointSizeF() > 0) aside.setPointSizeF(std::max(7.0, aside.pointSizeF() - 1.4));
         painter.setFont(aside);
-        painter.setPen(scheme.hint);
+        QColor asideInk = m_onFelt ? scheme.feltText : scheme.hint;
+        if (m_onFelt) asideInk.setAlphaF(0.62);
+        painter.setPen(asideInk);
         const QRectF blurbBox(inner.left(), nameBox.bottom() + 2, inner.width(),
                               inner.bottom() - nameBox.bottom() - 2);
         painter.drawText(blurbBox, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, m_blurb);
@@ -184,10 +206,11 @@ void TileButton::paintEvent(QPaintEvent *) {
         const QFontMetricsF metrics(badge);
         QRectF chip(0, 0, metrics.horizontalAdvance(m_corner) + 16.0, metrics.height() + 4.0);
         chip.moveTopRight(QPointF(box.right() - 9.0, box.top() + 9.0));
+        const QColor badgeFill = m_onFelt ? scheme.gold : scheme.accent;
         painter.setPen(Qt::NoPen);
-        painter.setBrush(scheme.accent);
+        painter.setBrush(badgeFill);
         painter.drawRoundedRect(chip, chip.height() / 2.0, chip.height() / 2.0);
-        painter.setPen(scheme.accentText);
+        painter.setPen(m_onFelt ? readableTextOn(badgeFill) : scheme.accentText);
         painter.drawText(chip, Qt::AlignCenter, m_corner);
     }
 }

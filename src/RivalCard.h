@@ -26,6 +26,12 @@ public:
     // Au menu, un clic invite. Ailleurs, la carte ne fait que dire.
     void setPickable(bool pickable);
 
+    // Posée sur le drap plutôt que sur le fond pâle d'un dialogue : la carte
+    // devient sombre et bordée d'or, et son encre passe à celle du tapis.
+    // Elle garde ce qu'elle dit -- sa petite phrase, son palmarès -- faute
+    // d'une fiche où le dire ailleurs.
+    void setOnFelt(bool onFelt);
+
     // Le rang dans lequel il a été invité : le premier s'assoit en face de
     // vous, et la carte le dit plutôt que de laisser la surprise pour la
     // première donne.
@@ -51,6 +57,7 @@ private:
     QString m_rivalId;
     QString m_seatNote;
     bool m_invited = false;
+    bool m_onFelt = false;
     bool m_pickable = false;
     bool m_hovered = false;
 };

@@ -33,7 +33,11 @@ QSizeF cardSizeForWidth(qreal width);
 
 // Le tapis : le tissu, éclairé en son centre, dont la trame est visible de
 // près, bordé d'un galon.
-void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme);
+//
+// `braid` commande le galon. On le laisse tomber quand le drap n'est pas une
+// table mais un fond : le menu d'ouverture est posé dessus, et un galon
+// derrière une page de plaques est un cadre de plus qui ne cadre rien.
+void drawFelt(QPainter *painter, const QRectF &box, const Palette &scheme, bool braid = true);
 
 // L'état de rendu d'une carte face visible. `lit` désigne la carte survolée
 // par le pointeur, `chosen` la carte sélectionnée dans la main du joueur,
