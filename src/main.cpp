@@ -52,7 +52,7 @@ QIcon builtInIcon() {
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    QApplication::setOrganizationName("pdcartes-belote");
+    QApplication::setOrganizationName("pdulvp");
     QApplication::setApplicationName("pdcartes-belote");
     QApplication::setApplicationVersion(fullVersion());
     // Ce sous quoi le bureau connaît cette application. Sous Wayland c'est
