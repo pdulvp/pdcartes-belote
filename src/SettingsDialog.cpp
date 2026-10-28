@@ -1,6 +1,7 @@
 #include "SettingsDialog.h"
 
 #include "FeltArt.h"
+#include "MenuStyle.h"
 #include "CardDeck.h"
 #include "DialogChrome.h"
 #include "Palette.h"
@@ -105,7 +106,7 @@ QToolButton *iconButton(QWidget *parent, const QStringList &iconNames, const QSt
     button->setFocusPolicy(Qt::NoFocus);
     button->setIconSize(QSize(17, 17));
 
-    const QIcon icon = tintedIcon(iconNames, scheme.surfaceText);
+    const QIcon icon = appIcon(iconNames, scheme.surfaceText);
     if (icon.isNull()) {
         button->setText(fallback);
         button->setToolButtonStyle(Qt::ToolButtonTextOnly);

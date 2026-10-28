@@ -94,34 +94,46 @@ qreal plateau(qreal along) {
     return 1.0 - (1.0 - at) * (1.0 - at);
 }
 
+// Le corps d'une plaque -- celle d'un joueur d'en face, et la vôtre.
+//
+// Sombre et translucide à filet d'or, comme les cartes du menu d'ouverture :
+// un panneau blanc sur un drap vert est un trou dans le drap, et les deux
+// pages doivent se ressembler. Celui dont c'est le tour s'éclaire un peu et
+// prend sa propre couleur dans le filet -- c'est la seule chose qui distingue
+// encore les quatre d'un coup d'œil.
 void paintPlaqueBody(QPainter *painter, const QRectF &box, const Palette &scheme,
                      const QColor &mine, bool active) {
     QPainterPath shape;
     shape.addRoundedRect(box, 11, 11);
 
-    QColor shade = scheme.feltEdge;
-    shade.setAlpha(120);
-    QPainterPath cast;
-    cast.addRoundedRect(box.translated(0, 2.5), 11, 11);
     painter->setPen(Qt::NoPen);
-    painter->fillPath(cast, shade);
-
-    QColor body = scheme.surface;
-    if (active) body = blendColours(body, mine, 0.18);
+    QColor body = feltPlaqueFill(scheme, active ? 0.10 : 0.0);
+    if (active) body = blendColours(body, mine, 0.14);
     painter->fillPath(shape, body);
 
     painter->setBrush(Qt::NoBrush);
-    painter->setPen(QPen(active ? mine : blendColours(scheme.surface, scheme.surfaceText, 0.18),
-                         active ? 2.4 : 1.0));
+    painter->setPen(QPen(active ? mine : feltGold(scheme, 0.26), active ? 2.4 : 1.0));
     painter->drawPath(shape);
 }
 
+// L'encre d'une plaque, et son aparté : claires, maintenant qu'elle est
+// sombre.
+QColor plaqueInk(const Palette &scheme) { return scheme.feltText; }
+
+QColor plaqueAside(const Palette &scheme) {
+    QColor ink = scheme.feltText;
+    ink.setAlphaF(0.62);
+    return ink;
+}
+
+// Les enseignes du tapis -- « L'atout », ce qui nomme un endroit plutôt qu'un
+// détail -- dans la fonte du haut du logo, comme les titres de section du
+// menu. Elle n'a pas de bas-de-casse, ses minuscules étant ses capitales :
+// `AllUppercase` ne sert donc qu'au repli.
 QFont capsFont(const QPainter *painter, int size) {
-    QFont font = plainFont(painter);
-    font.setBold(true);
-    font.setPixelSize(size);
+    QFont font = familyFont(plainFont(painter), capsFamily(), size + 2);
     font.setCapitalization(QFont::AllUppercase);
-    font.setLetterSpacing(QFont::PercentageSpacing, 130);
+    font.setLetterSpacing(QFont::PercentageSpacing, 120);
     return font;
 }
 
@@ -708,7 +720,7 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     int emblem = 0;
     if (!seat.rivalId.isEmpty()) emblem = rivalById(seat.rivalId).emblem;
     drawRivalEmblem(painter, medallion, emblem, seat.name, mine,
-                    blendColours(scheme.surface, mine, 0.14));
+                    blendColours(feltPlaqueFill(scheme), mine, 0.14));
 
     const qreal textLeft = medallion.right() + 9.0;
     const qreal textWidth = inner.right() - textLeft;
@@ -727,16 +739,16 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     QRectF chip(0, 0, tagMetrics.horizontalAdvance(role) + 12.0, tagMetrics.height() + 3.0);
     chip.moveTopRight(QPointF(inner.right(), inner.top() + 1.0));
     painter->setPen(Qt::NoPen);
-    painter->setBrush(partner ? mine : blendColours(scheme.surface, scheme.surfaceText, 0.12));
+    painter->setBrush(partner ? mine : feltGold(scheme, 0.16));
     painter->drawRoundedRect(chip, chip.height() / 2.0, chip.height() / 2.0);
-    painter->setPen(partner ? readableTextOn(mine) : scheme.hint);
+    painter->setPen(partner ? readableTextOn(mine) : plaqueAside(scheme));
     painter->drawText(capCentred(chip, tagMetrics), Qt::AlignCenter, role);
 
     QFont name = plainFont(painter);
     name.setBold(true);
     name.setPixelSize(int(std::clamp(inner.height() * 0.215, 11.0, 17.0)));
     painter->setFont(name);
-    painter->setPen(scheme.surfaceText);
+    painter->setPen(plaqueInk(scheme));
     const QFontMetricsF nameMetrics(name);
     // Jusqu'à la pastille et pas plus loin, et coupé s'il ne tient pas : un nom
     // qui déborde sur « contre vous » en fait deux illisibles au lieu d'un.
@@ -755,18 +767,23 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
         const QFontMetricsF smallMetrics(small);
 
         const qreal starSpan = std::min(42.0, textWidth * 0.32);
-        drawLevelStars(painter, QRectF(textLeft, y + 1.0, starSpan, smallMetrics.height() - 2.0),
-                       levelStars(level), 3, scheme.gold,
-                       blendColours(scheme.surface, scheme.surfaceText, 0.16));
-        painter->setPen(scheme.hint);
-        painter->drawText(QRectF(textLeft + starSpan + 6.0, y, textWidth - starSpan - 6.0,
-                                 smallMetrics.height()),
-                          Qt::AlignLeft | Qt::AlignVCenter, levelName(level));
+        const QRectF starBox(textLeft, y + 1.0, starSpan, smallMetrics.height() - 2.0);
+        drawLevelStars(painter, starBox, levelStars(level), 3, scheme.gold,
+                       blendColours(feltPlaqueFill(scheme), plaqueInk(scheme), 0.16));
+        painter->setPen(plaqueAside(scheme));
+        // Le mot se centre sur les étoiles et non sur sa propre ligne : les
+        // étoiles sont un dessin, haut de ce qu'on lui donne, et le texte
+        // était posé plus bas qu'elles.
+        QRectF levelBox(textLeft + starSpan + 6.0, 0.0, textWidth - starSpan - 6.0,
+                        smallMetrics.height());
+        levelBox.moveCenter(QPointF(levelBox.center().x(), starBox.center().y()));
+        painter->drawText(capCentred(levelBox, smallMetrics), Qt::AlignLeft | Qt::AlignVCenter,
+                          levelName(level));
         y += smallMetrics.height() + 1.0;
 
         drawGauge(painter, QRectF(textLeft, y + 2.0, std::min(textWidth, 92.0), 4.0),
                   progressWithin(learning.xp), mine,
-                  blendColours(scheme.surface, scheme.surfaceText, 0.14));
+                  blendColours(feltPlaqueFill(scheme), plaqueInk(scheme), 0.14));
         y += 9.0;
     }
 
@@ -784,10 +801,11 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
         const qreal pip = std::min(22.0, inner.height() * 0.30);
         const QRectF where(inner.right() - pip, inner.bottom() - pip, pip, pip);
         painter->setPen(Qt::NoPen);
-        painter->setBrush(blendColours(scheme.surface, mine, 0.22));
+        painter->setBrush(blendColours(feltPlaqueFill(scheme), mine, 0.22));
         painter->drawRoundedRect(where.adjusted(-3, -3, 3, 3), 5, 5);
         drawSuitPip(painter, where.adjusted(2, 2, -2, -2), m_game->trump(),
-                    isRed(m_game->trump()) ? scheme.cardRed : scheme.surfaceText);
+                    isRed(m_game->trump()) ? blendColours(scheme.cardRed, QColor(Qt::white), 0.18)
+                                           : plaqueInk(scheme));
         rightEdge = where.left() - 9.0;
     }
 
@@ -809,10 +827,9 @@ void TableView::paintSeatPlaque(QPainter *painter, const QRectF &box, int at) {
     const bool counts = m_game->annonceTeam() == Belote::teamOf(at);
     const bool known = m_game->annoncesSettled();
     painter->setPen(Qt::NoPen);
-    painter->setBrush(known && !counts ? blendColours(scheme.surface, scheme.surfaceText, 0.12)
-                                       : scheme.gold);
+    painter->setBrush(known && !counts ? feltGold(scheme, 0.16) : scheme.gold);
     painter->drawRoundedRect(said, said.height() / 2.0, said.height() / 2.0);
-    painter->setPen(known && !counts ? scheme.hint : readableTextOn(scheme.gold));
+    painter->setPen(known && !counts ? plaqueAside(scheme) : readableTextOn(scheme.gold));
     painter->drawText(said, Qt::AlignCenter, shown);
 }
 
