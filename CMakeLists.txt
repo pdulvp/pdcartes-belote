@@ -64,8 +64,8 @@ add_executable(belotesol
     # dessous de cette ligne ne connaît les règles.
     src/Cards.cpp
     src/Cards.h
-    src/CardArt.cpp
-    src/CardArt.h
+    src/FeltArt.cpp
+    src/FeltArt.h
     # Les règles : l'enchère, les annonces, les huit plis, et la marque. Rien
     # ici ne sait qu'il y a un écran.
     src/Tables.cpp

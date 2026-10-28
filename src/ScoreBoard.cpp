@@ -1,7 +1,7 @@
 #include "ScoreBoard.h"
 
 #include "Belote.h"
-#include "CardArt.h"
+#include "FeltArt.h"
 #include "Palette.h"
 
 #include <QFontMetricsF>
